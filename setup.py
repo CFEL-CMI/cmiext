@@ -8,12 +8,7 @@ import os
 from distutils.core import setup
 
 extra_compile_args = []
-
-# library dirs
 library_dirs = []
-
-
-### No changes needed below ###
 
 long_description = """JK Python extensions
 
@@ -24,7 +19,7 @@ Current maintainer: Jochen Küpper <software@jochen-kuepper.de>
 """
 
 
-setup(name="beamline",
+setup(name="jkext",
       author              = "Jochen Küpper",
       author_email        = "software@jochen-kuepper.de",
       description         = "JK Python extensions",
