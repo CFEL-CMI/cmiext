@@ -148,13 +148,15 @@ class AsymmetricRotor:
                 # C2 rotation about a-axis is symmetry element
                 #
                 # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E- and E+) and O
-                # (contains O- and O+). In this case E corresponds to columns with Ka even and O to columns with Ka odd
+                # (contains O- and O+). In this case E and O corresponds to columns with Ka even and odd, respectively.
                 self.__wang['E'] = self.__hmat
                 self.__wang['O'] = self.__hmat
             elif self.__symmetry == 'b': # C2 rotation about b-axis is symmetry element
-                pass
+                print "Hamiltonian symmetry 'b' not implemented yet"
+                exit(1)
             elif self.__symmetry == 'c': # C2 rotation about c-axis is symmetry element
-                pass
+                print "Hamiltonian symmetry 'c' not implemented yet"
+                exit(1)
             else:
                 # something went wrong
                 print "unknown Hamiltonian symmetry"
