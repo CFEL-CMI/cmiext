@@ -14,9 +14,9 @@ class State:
         self.labels = num.array([J, Ka, Kc, M, isomer])
         self.max = 1000
         assert J < self.max and Ka < self.max and Kc < self.max and Kc < self.max and isomer < self.max
-        self.id = num.uint64(0)
+        self.__id = num.uint64(0)
         for i in range(self.labels.size):
-            self.id += num.uint64(self.labels[i] * self.max**i)
+            self.__id += num.uint64(self.labels[i] * self.max**i)
 
     def toarray(self):
         return self.labels
@@ -25,7 +25,8 @@ class State:
         return self.labels.tolist()
 
     def id(self):
-        return self.id
+        return self.__id
+
 
 
 class AsymmetricRotor:
@@ -45,7 +46,7 @@ class AsymmetricRotor:
         """Return Stark energy for |state|."""
         if not self.__valid:
             self.__recalculate()
-        return self.__levels[state.id]
+        return self.__levels[state.id()]
            
 
     def quantum_numbers(self, M=0, Jmin=0, Jmax=10, Jmax_save=2):
@@ -71,7 +72,8 @@ class AsymmetricRotor:
         for J in range(self.__Jmin, self.__Jmax_save + 1):
             Kc = 0
             for Ka in range(0, J+1):
-                self.__levels[State(0, 0, 0, 0, 0).id] = eval[0]
+                # FIXME
+                self.__levels[State(0, 0, 0, 0, 0).id()] = eval[0]
         
 
     def __full_hamiltonian(self):
@@ -142,8 +144,13 @@ class AsymmetricRotor:
                 self.__wang['Em'] = self.__hmat
                 self.__wang['Op'] = self.__hmat
                 self.__wang['Om'] = self.__hmat
-            elif self.__symmetry == 'a': # C2 rotation about a-axis is symmetry element
-                pass
+            elif self.__symmetry == 'a': 
+                # C2 rotation about a-axis is symmetry element
+                #
+                # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E- and E+) and O
+                # (contains O- and O+). In this case E corresponds to columns with Ka even and O to columns with Ka odd
+                self.__wang['E'] = self.__hmat
+                self.__wang['O'] = self.__hmat
             elif self.__symmetry == 'b': # C2 rotation about b-axis is symmetry element
                 pass
             elif self.__symmetry == 'c': # C2 rotation about c-axis is symmetry element
