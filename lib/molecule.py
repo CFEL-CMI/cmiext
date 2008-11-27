@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2008 Jochen Küpper
 
@@ -106,7 +107,8 @@ class Molecule:
 
     def rotate(self, rotation):
         """Rotate molecule using the right rotation matrix given (i.e., rotate all atomic coordinates)."""
-        num.dot(self.positions, rotation)
+        self.positions = num.dot(self.positions, rotation)
+        return self.positions 
 
 
     def to_principal_axis_of_inertia(self):
