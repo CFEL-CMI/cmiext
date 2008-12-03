@@ -6,6 +6,7 @@
 import numpy as num
 import numpy.linalg
 import pygsl.const
+import tables
 
 Masses = {'H': 1.0078250321, 'C': 12, 'N': 14.0030740052, 'O': 15.9949146221}
 Ordernumbers = {'H': 1, 'D': 1, 'C': 6, 'N': 7, 'O': 8}
@@ -46,6 +47,37 @@ class Atom:
 
 
 
+class State:
+    """State label of molecule (currently only asymmetric top notation)"""
+
+    def __init__(self, J, Ka, Kc, M, isomer=0):
+        self.labels = num.array([J, Ka, Kc, M, isomer], dtype=num.uint64)
+        self.max = 1000
+        assert J < self.max and Ka < self.max and Kc < self.max and Kc < self.max and isomer < self.max
+        self.__id = num.uint64(0)
+        for i in range(self.labels.size):
+            self.__id += num.uint64(self.labels[i] * self.max**i)
+
+    def id(self):
+        return self.__id
+
+    def name(self):
+        return "%d %d %d %d %d" % self.totuple()
+
+    def hdfname(self):
+        return "_%d_%d_%d_%d_%d_" % self.totuple()
+
+    def toarray(self):
+        return self.labels
+
+    def tolist(self):
+        return self.labels.tolist()
+
+    def totuple(self):
+        return tuple(self.labels.tolist())
+
+
+
 class Molecule:
     """Representation of a Molecule
 
@@ -53,10 +85,16 @@ class Molecule:
     positions.
     """
 
-    def __init__(self, atoms=[]):
+    def __init__(self, atoms=[], name="Generic molecule", storage=None):
         """Create Molecule from a list of atoms."""
         self.__atoms = atoms
+        self.__name = name
+        if storage != None:
+            self.__storage = tables.openFile(storage, mode='a', title=name)
+        else:
+            self.__storage = None
         self.__update()
+
 
     def __update(self):
         self.masses = num.zeros((len(self.__atoms),))
@@ -119,7 +157,57 @@ class Molecule:
         rotcon, axes = self.principal_axis_of_inertia()
         self.rotate(axes)
         return rotcon
-            
+
+
+    def __get_starkeffect(self, state):
+        entry = self.__storage.getNode("/dcstarkeffect/" + state.hdfname())
+        data = entry.read(0)
+        return data['field'][0], data['energy'][0]
+    
+
+    def __set_starkeffect(self, state, energies, fields):
+        """Set potential |energies| for the specified |state| over the field-strength vector given in |fields|."""
+
+        assert len(fields) == len(energies)
+
+        class entry(tables.IsDescription):
+            name = tables.StringCol(32)
+            field = tables.Float64Col(len(fields))
+            energy = tables.Float64Col(len(energies))
+                
+        try:
+            group = self.__storage.root.dcstarkeffect
+        except:
+            group = self.__storage.createGroup('/', 'dcstarkeffect', 'DC Stark effect energy')
+        try:
+            table = self.__storage.removeNode("/dcstarkeffect/" + state.hdfname())
+        except:
+            pass
+        table = self.__storage.createTable(group, state.hdfname(), entry, "potential energy")
+        entry = table.row
+        entry['name'] = state.name()
+        entry['field'] = fields
+        entry['energy'] = energies
+        entry.append()
+        self.__storage.flush()
+
+
+    def starkeffect(self, state, energies=None, fields=None):
+        """Get or set the potential energies as a function of the electric field strength.
+
+        When |energies| and |fields| are None, return the Stark curve for the specified quantum state.
+
+        When |energies| and |fields| are specified, save the Stark curve for the specified quantum state in the
+        Molecule's HDF5 storage file.
+        """
+        if energies == None and fields == None:
+            return self.__get_starkeffect(state)
+        elif energies == None or fields == None:
+            raise SyntaxError
+        else:
+            return self.__set_starkeffect(state, energies, fields)
+        
+
 
     def translate(self, translation):
         """Translate center of mass of molecule (i.e., translate all atoms)."""
@@ -127,6 +215,18 @@ class Molecule:
             
 
 
+
+if __name__ == "__main__":
+    state = State(0, 0, 0, 0)
+    field = num.linspace(0., 100., 51)
+    energy = num.array(num.linspace(0., -5., 51))
+    mol = Molecule(storage="/tmp/generic.hdf")
+    mol.starkeffect(state, energy, field)
+    field = num.linspace(0., 100., 101)
+    energy = num.array(num.linspace(0., -5., 101))
+    mol.starkeffect(state, energy, field)
+    fields, energies = mol.starkeffect(state)
+    print fields, energies
     
 
 

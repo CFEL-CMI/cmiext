@@ -7,28 +7,6 @@ import numpy as num
 import numpy.linalg
 
 
-class State:
-    """State label"""
-
-    def __init__(self, J, Ka, Kc, M, isomer=0):
-        self.labels = num.array([J, Ka, Kc, M, isomer])
-        self.max = 1000
-        assert J < self.max and Ka < self.max and Kc < self.max and Kc < self.max and isomer < self.max
-        self.__id = num.uint64(0)
-        for i in range(self.labels.size):
-            self.__id += num.uint64(self.labels[i] * self.max**i)
-
-    def toarray(self):
-        return self.labels
-
-    def tolist(self):
-        return self.labels.tolist()
-
-    def id(self):
-        return self.__id
-
-
-
 class AsymmetricRotor:
     """Representation of an asymmetric top for energy level calculation purposes."""
 
