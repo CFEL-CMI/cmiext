@@ -2,11 +2,16 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2008 Jochen Küpper <software@jochen-kuepper.de>
+# see LICENSE file for details
+
+__author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 import numpy as num
 import numpy.linalg
 import const
 import tables
+import starkeffect
+
 
 Masses = {'H': 1.0078250321, 'C': 12, 'N': 14.0030740052, 'O': 15.9949146221}
 Ordernumbers = {'H': 1, 'D': 1, 'C': 6, 'N': 7, 'O': 8}
@@ -237,26 +242,45 @@ class Molecule:
             return self.__set_starkeffect(state, energies, fields)        
 
 
+    def starkeffect_calculation(self, param):
+        """Get all available energies from the given Starkeffect object and store them in our storage file."""
+        energies = {}
+        if 'A' == param.type:
+            for M in param.M:
+                for field in param.fields:
+                    calc = starkeffect.AsymmetricRotor(param, M, 0)
+                    for state in calc.states():
+                        id = state.id()
+                        if energies.has_key(id):
+                            energies[id].append(calc.energy(state))
+                        else:
+                            energies[id] = [calc.energy(state),]
+        else:
+            raise NotImplementedError("unknow rotor type in Stark energy calculation.")
+        # store calculated values
+        for id in energies.keys():
+            self.starkeffect(State().fromid(id), energies[id], param.fields)
+
+
     def translate(self, translation):
         """Translate center of mass of molecule (i.e., translate all atoms)."""
         self.positions += translation
             
 
 
-
+# some simple tests
 if __name__ == "__main__":
     state = State(0, 0, 0, 0)
     state.fromid(1000001)
     print state.name()
-    field = num.linspace(0., 100., 51)
-    energy = num.array(num.linspace(0., -5., 51))
-    mol = Molecule(storage="/tmp/generic.hdf")
-    mol.starkeffect(state, energy, field)
-    field = num.linspace(0., 100., 101)
-    energy = num.array(num.linspace(0., -5., 101))
-    mol.starkeffect(state, energy, field)
-    fields, energies = mol.starkeffect(state)
-    print fields, energies
+
+    param = starkeffect.CalculationParameter
+    param.rotcon = [5e9, 2e9, 1.5e9]
+    param.dipole = [1., 0., 0.]
+    mol = Molecule(storage="molecule.hdf")
+    mol.starkeffect_calculation(param)
+    state = State(1, 0, 1, 1)
+    print mol.starkeffect(state)
     
 
 
