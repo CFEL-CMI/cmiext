@@ -5,13 +5,15 @@
 
 import numpy as num
 import numpy.linalg
+from molecule import State
 
 
 class AsymmetricRotor:
     """Representation of an asymmetric top for energy level calculation purposes."""
 
-    def __init__(self, rotcon, quartic=[0., 0., 0., 0., 0.], dipole=None, reduction=None, symmetry=None):
+    def __init__(self, rotcon, quartic=[0., 0., 0., 0., 0.], fields=[0.], dipole=[0., 0., 0.], reduction=None, symmetry=None):
         self.__valid = False # we have not yet calculated the correct energies
+        self.__fields = num.array(fields)
         self.__rotcon = num.array(rotcon)
         assert self.__rotcon.shape == (3,)
         self.__quartic = num.array(quartic)
@@ -23,17 +25,20 @@ class AsymmetricRotor:
     def energy(self, state):
         """Return Stark energy for |state|."""
         if not self.__valid:
+            self.__isomer = state.isomer()
             self.__recalculate()
         return self.__levels[state.id()]
            
 
-    def quantum_numbers(self, M=0, Jmin=0, Jmax=10, Jmax_save=2):
+    def quantumnumbers(self, M=0, Jmin=0, Jmax=10, Jmax_save=2):
+        assert Jmin >= M
         self.__M = M
         self.__Jmin = Jmin
         self.__Jmax = Jmax
         self.__Jmax_save = Jmax_save
         self.__matrixsize_Jmin = self.__Jmin *(self.__Jmin-1) + self.__Jmin
         self.__matrixsize = (self.__Jmax + 1) * self.__Jmax + self.__Jmax + 1 - self.__matrixsize_Jmin
+        # print "Matrixsize is (%d, %d) = %d entries", self.__matrixsize, self.__matrixsize, self.__matrixsize**2
 
 
     def __index(self, J, K):
@@ -42,16 +47,19 @@ class AsymmetricRotor:
         
 
     def __recalculate(self):
-        self.__full_hamiltonian()
-        self.__wang()
-        eval = num.linalg.eigvalsh(self.__hmat) # calculate only energies
-        eval = num.sort(eval)
         self.__levels = {}
-        for J in range(self.__Jmin, self.__Jmax_save + 1):
-            Kc = 0
-            for Ka in range(0, J+1):
-                # FIXME
-                self.__levels[State(0, 0, 0, 0, 0).id()] = eval[0]
+        self.__full_hamiltonian()
+        blocks = self.__wang()
+        for symmetry in blocks.keys():
+            eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate only energies
+            eval = num.sort(eval)
+            if self.__symmetry == None:
+                i = 0
+                for stateid in self.__stateidorder(symmetry):
+                    self.__levels[stateid] = eval[i]
+                    i += 1
+            else:
+                raise NotImplementedError("Symmetric cases not implemented yet")
         
 
     def __full_hamiltonian(self):
@@ -61,12 +69,10 @@ class AsymmetricRotor:
         self.__rigid()
         # add appropriate field-free centrifugal distortion terms
         if self.__reduction == 'A':
-            print "not implemented"
-            exit(1)
+            raise NotImplementedError("Watson's A-reduction is not implemented (yet)")
             self.__watson_A()
         elif self.__reduction == 'S':
-            print "not implemented"
-            exit(1)
+            raise NotImplementedError("Watson's S-reduction is not implemented (yet)")
             self.__watson_S()
         else:
             assert self.__reduction == None
@@ -91,6 +97,23 @@ class AsymmetricRotor:
         pass
 
 
+
+    def __stateidorder(self, symmetry):
+        """Return a list with all stateids for the given |symmetry| and the current calculation parameters (Jmin, Jmax_save)."""
+        ids = []
+        M = self.__M
+        iso = self.__isomer
+        for J in range(self.__Jmin, self.__Jmax+1):
+            Ka = 0
+            for Kc in range(J, -1, -1):
+                ids.append(State(J, Ka, Kc, M, iso).id())
+                if Kc > 0:
+                    Ka += 1
+                    ids.append(State(J, Ka, Kc, M, iso).id())
+        return ids
+                
+        
+
     def __wang(self):
         """Wang transform matrix and (potentially) store the submatrices in __wang (a map). 
 
@@ -98,9 +121,10 @@ class AsymmetricRotor:
         
         For calculations with C2v symmetry, four submatrices are stored under the labels 'Ep', 'Em', 'Op', 'Om'.
         """
+        blocks = {}
         if self.__symmetry == None:
             # nothing to do, return
-            self.__wang = {}
+            blocks['N'] = self.__hmat
         else:
             # set up Wang matrix
             Wmat = num.zeros(self.__hmat.shape)
@@ -118,28 +142,25 @@ class AsymmetricRotor:
             print self.__hmat
             # sort out matrix blocks
             if self.__symmetry == 'V': # full Fourgroup symmetry
-                self.__wang['Ep'] = self.__hmat
-                self.__wang['Em'] = self.__hmat
-                self.__wang['Op'] = self.__hmat
-                self.__wang['Om'] = self.__hmat
+                blocks['Ep'] = self.__hmat
+                blocks['Em'] = self.__hmat
+                blocks['Op'] = self.__hmat
+                blocks['Om'] = self.__hmat
             elif self.__symmetry == 'a': 
                 # C2 rotation about a-axis is symmetry element
                 #
                 # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E- and E+) and O
                 # (contains O- and O+). In this case E and O corresponds to columns with Ka even and odd, respectively.
-                self.__wang['E'] = self.__hmat
-                self.__wang['O'] = self.__hmat
+                blocks['E'] = self.__hmat
+                blocks['O'] = self.__hmat
             elif self.__symmetry == 'b': # C2 rotation about b-axis is symmetry element
-                print "Hamiltonian symmetry 'b' not implemented yet"
-                exit(1)
+                raise NotImplementedError("Hamiltonian symmetry 'b' not implemented yet")
             elif self.__symmetry == 'c': # C2 rotation about c-axis is symmetry element
-                print "Hamiltonian symmetry 'c' not implemented yet"
-                exit(1)
+                raise NotImplementedError("Hamiltonian symmetry 'c' not implemented yet")
             else:
                 # something went wrong
-                print "unknown Hamiltonian symmetry"
-                exit(1)
-
+                raise "unknown Hamiltonian symmetry"
+        return blocks
 
     def __watson_A(self):
         """Add the centrifugal distortion matrix element terms in Watson's A reduction to self.__hmat."""
@@ -158,9 +179,8 @@ if __name__ == "__main__":
     # test calculation for benzonitrile (J Mol Spec ...)
     rotcon = num.array([5e9, 2e9, 1.8e9])
     top = AsymmetricRotor(rotcon)
-    top.quantum_numbers(0, 0, 1, 1)
-    print top.energy(State(0, 0, 0, 0, 0))
-#     print top.energy(State(1, 0, 1, 0, 0))
+    top.quantumnumbers(0, 0, 10, 2)
+    print top.energy(State(1, 0, 1, 0, 0))
 
 
 ### Local Variables:
