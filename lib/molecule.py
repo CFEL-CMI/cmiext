@@ -248,7 +248,7 @@ class Molecule:
         if 'A' == param.type:
             for M in param.M:
                 for field in param.fields:
-                    calc = starkeffect.AsymmetricRotor(param, M, 0)
+                    calc = starkeffect.AsymmetricRotor(param, M, field)
                     for state in calc.states():
                         id = state.id()
                         if energies.has_key(id):
@@ -270,17 +270,18 @@ class Molecule:
 
 # some simple tests
 if __name__ == "__main__":
+    # test State
     state = State(0, 0, 0, 0)
     state.fromid(1000001)
     print state.name()
-
+    # test Stark calculation and storage/retrieval
     param = starkeffect.CalculationParameter
     param.rotcon = [5e9, 2e9, 1.5e9]
     param.dipole = [1., 0., 0.]
     mol = Molecule(storage="molecule.hdf")
     mol.starkeffect_calculation(param)
-    state = State(1, 0, 1, 1)
-    print mol.starkeffect(state)
+    print mol.starkeffect(State(0, 0, 0, 0))
+    print mol.starkeffect(State(1, 0, 1, 1))
     
 
 
