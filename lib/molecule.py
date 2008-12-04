@@ -275,13 +275,15 @@ if __name__ == "__main__":
     state.fromid(1000001)
     print state.name()
     # test Stark calculation and storage/retrieval
+    from convert import *
     param = starkeffect.CalculationParameter
-    param.rotcon = [5e9, 2e9, 1.5e9]
-    param.dipole = [1., 0., 0.]
+    param.rotcon = Hz2J(num.array([5e9, 2e9, 1.5e9]))
+    param.dipole = D2Cm(num.array([1., 0., 0.]))
     mol = Molecule(storage="molecule.hdf")
     mol.starkeffect_calculation(param)
-    print mol.starkeffect(State(0, 0, 0, 0))
-    print mol.starkeffect(State(1, 0, 1, 1))
+    for state in [State(0, 0, 0, 0), State(1, 0, 1, 1)]:
+        fields, energies = mol.starkeffect(state)
+        print V_m2kV_cm(fields), J2Hz(energies)
     
 
 

@@ -8,6 +8,7 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 import numpy as num
 import numpy.linalg
+import convert
 from molecule import State
 
 
@@ -21,7 +22,7 @@ class CalculationParameter:
     - an asymmetric top: M, Jmin, Jmax_calc, Jmax_save
     """
     type = 'A'
-    fields = num.linspace(0., 100., 5) # V/m
+    fields = convert.kV_cm2V_m(num.linspace(0., 100., 5)) # V/m
     M = range(0, 2)
     Jmin = 0
     Jmax_calc = 5
