@@ -1,1 +1,17 @@
 JK Python extensions
+====================
+
+* Installation
+
+In order to install this extension module in user-space, run
+    python setup.py install --home=$HOME/.python
+and set yur environment up for python to find it:
+    setenv PYTHONPATH $HOME/.python/lib/python
+
+
+* Requirements
+
+The extension package rests on the shoulders of giants, i.e., you need
+some other important Python packages, including (but not necessarily
+limited to)
+    - numpy
