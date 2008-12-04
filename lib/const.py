@@ -9,7 +9,7 @@ If pyGSL is avialable, we will simply import its constants into our namespace.
 Otherwise, we will provide "copies" of the most important constants,
 using the same naming convention and the same values.
 
-Values last updated: $Date:$"""
+Values last updated: $Date$"""
 
 try:
     from pygsl.const import *
