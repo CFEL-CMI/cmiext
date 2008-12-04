@@ -13,7 +13,7 @@ Values last updated: $Date$"""
 
 try:
     from pygsl.const import *
-except:
+except ImportError:
     angstrom = 1e-10
     pi = 3.1415926535897931
     plancks_constant_h = 6.6260689599999996e-34
