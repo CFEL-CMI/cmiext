@@ -66,6 +66,12 @@ class AsymmetricRotor:
         # more checks
         assert self.__rotcon.shape == (3,)
         assert self.__quartic.shape == (5,)
+        # some useful constants
+        self.__tiny = num.finfo(num.dtype(float)).tiny * 10
+        self.__dipole_components = [self.__tiny < abs(self.__dipole[0]),
+                                    self.__tiny < abs(self.__dipole[1]),
+                                    self.__tiny < abs(self.__dipole[2])]
+
 
         
     def energy(self, state):
@@ -120,7 +126,10 @@ class AsymmetricRotor:
 
     def __full_hamiltonian(self):
         # create hamiltonian matrix
-        self.__hmat = num.zeros((self.__matrixsize, self.__matrixsize))
+        if True == self.__dipole_components[1]: # µ_b != 0
+            self.__hmat = num.zeros((self.__matrixsize, self.__matrixsize), num.complex128)
+        else:
+            self.__hmat = num.zeros((self.__matrixsize, self.__matrixsize), num.float64)
         # start matrix with appropriate field-free rigid-rotor terms
         self.__rigid()
         # add appropriate field-free centrifugal distortion terms
@@ -142,18 +151,32 @@ class AsymmetricRotor:
         A, B, C = self.__rotcon.tolist()
         for J in range(self.__Jmin, self.__Jmax+1):
             for K in range(-J, J+1):
-                self.__hmat[self.__index(J, K), self.__index(J, K)] = (B+C)/2 * (J*(J+1) - K**2) + A * K**2
+                self.__hmat[self.__index(J, K), self.__index(J, K)] += (B+C)/2 * (J*(J+1) - K**2) + A * K**2
             for K in range (-J, J-2+1):
                 self.__hmat[self.__index(J, K+2), self.__index(J, K)] \
-                    = (C-B)/4 * sqrt(J*(J+1) - (K+1)*(K+2)) * sqrt(J*(J+1) - K*(K+1))
+                    += (C-B)/4 * sqrt(J*(J+1) - (K+1)*(K+2)) * sqrt(J*(J+1) - K*(K+1))
                 self.__hmat[self.__index(J, K), self.__index(J, K+2)] \
-                    = (C-B)/4 * sqrt(J*(J+1) - (K+1)*(K+2)) * sqrt(J*(J+1) - K*(K+1))
+                    += (C-B)/4 * sqrt(J*(J+1) - (K+1)*(K+2)) * sqrt(J*(J+1) - K*(K+1))
 
 
     def __stark(self):
-        """Add the Stark-effect matrix element terms to self.__hmat."""
-        pass
-
+        """Add the Stark-effect matrix element terms to self.__hmat"""
+        sqrt = num.sqrt
+        field = self.__field
+        M = self.__M
+        muA, muB, muC = self.__dipole
+        if self.__tiny < abs(muA) and self.__tiny < abs(field):
+            # matrix elements involving µ_a
+            for J in range(self.__Jmin, self.__Jmax):
+                for K in range(-J, J+1):
+                    if 0 != J:
+                        self.__hmat[self.__index(J, K), self.__index(J, K)] += -muA * field * M * K / (J*(J+1))
+                    self.__hmat[self.__index(J+1, K), self.__index(J, K)] +=  -muA * field \
+                        * sqrt((J+1)**2 - K**2) * sqrt((J+1)**2 - M**2) / ((J+1) * sqrt((2*J+1) * (2*J+3)))
+            # final diagonal elements
+            J = self.__Jmax
+            for K in range(-J, J+1):
+                self.__hmat[self.__index(J, K), self.__index(J, K)] += -1. * M * K / (J*(J+1)) * muA * field
 
 
     def __stateidorder(self, symmetry):
