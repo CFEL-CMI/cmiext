@@ -1,17 +1,31 @@
 JK Python extensions
 ====================
 
+* License
+
+The JK Python extensions are
+  Copyright (C) 2008 Jochen Küpper
+See License for details.
+
+
+* Prerequisites 
+
+The extension package rests on the shoulders of giants, i.e., you need
+a recent Python 2.x system and some other important Python packages,
+including (but not necessarily limited to)
+  - numpy
+  - pytables
+
+These requirements can all be met by using the Enthought Python
+Distribution, for example.
+
+
 * Installation
+
+Adminstrator installation:
+    python setup.py install --home=$HOME/.python
 
 In order to install this extension module in user-space, run
     python setup.py install --home=$HOME/.python
-and set yur environment up for python to find it:
+and set your environment up for python to find it:
     setenv PYTHONPATH $HOME/.python/lib/python
-
-
-* Requirements
-
-The extension package rests on the shoulders of giants, i.e., you need
-some other important Python packages, including (but not necessarily
-limited to)
-    - numpy

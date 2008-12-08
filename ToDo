@@ -1,0 +1,13 @@
+JK Python extensions
+====================
+
+* Stark energy calculation
+  - provide tool for merging files
+  - use sparse matrices (i.e., using pysparse)
+  - parallelize by calculating individual Ms/fields separately and merging them afterwards
+
+
+* general
+  - implement molecular beam source simulations
+  - implement trajectory calculations
+  - provide analysis tools for phase-space distributions
