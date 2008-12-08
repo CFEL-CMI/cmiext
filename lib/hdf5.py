@@ -18,20 +18,33 @@ from __future__ import division
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
-"""Provide physical constants.
+import numpy as num
+import tables
 
-If pyGSL is available, we will simply import its constants into our namespace.
 
-Otherwise, we will provide "copies" of the most important constants,
-using the same naming convention and the same values.
+def readVLArray(file, name):
+    array = file.getNode(name)
+    return num.array(array.read())[0]
 
-Values last updated: $Date$"""
 
-try:
-    from pygsl.const import *
-except ImportError:
-    angstrom = 1e-10
-    pi = 3.1415926535897931
-    plancks_constant_h = 6.6260689599999996e-34
-    speed_of_light = 299792458.
-    unified_atomic_mass = 1.6605387820000001e-27
+def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float64Atom(shape=()),
+                 filters=tables.Filters(complevel=9, complib='zlib')):
+    root = file.root
+    # make sure the group exists
+    try:
+        group = file.getNode(root, groupname)
+    except tables.exceptions.NodeError:
+        group = root
+        for name in groupname.split('/'):
+            if 0 < len(name):
+                try:
+                    group = file.createGroup(group, name)
+                except tables.exceptions.NodeError:
+                    pass
+    # if the dataset exists already, delete it
+    try:
+        file.removeNode(group, leafname)
+    except tables.exceptions.NodeError, tables.exceptions.NoSuchNodeError:
+        pass
+    array = file.createVLArray(group, leafname, atom, comment, filters)
+    array.append(data)

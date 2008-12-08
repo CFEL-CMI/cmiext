@@ -1,8 +1,21 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8; fill-column: 120 -*-
 #
+# This file is part of JK Python extensions
 # Copyright (C) 2008 Jochen Küpper <software@jochen-kuepper.de>
-# see LICENSE file for details
+#
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# If you use this programm for scietific work, you must correctly reference it; see LICENSE file for details.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program. If not, see
+# <http://www.gnu.org/licenses/>.
+from __future__ import division
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
@@ -11,8 +24,8 @@ import numpy.linalg
 import const
 import tables
 
-import starkeffect
-from state import State
+import jkext.hdf5, jkext.starkeffect, jkext.util
+from jkext.state import State
 
 
 Masses = {'H': 1.0078250321, 'C': 12, 'N': 14.0030740052, 'O': 15.9949146221}
@@ -123,7 +136,7 @@ class Molecule:
     def rotate(self, rotation):
         """Rotate molecule using the right rotation matrix given (i.e., rotate all atomic coordinates)."""
         self.positions = num.dot(self.positions, rotation)
-        return self.positions 
+        return self.positions
 
 
     def to_principal_axis_of_inertia(self):
@@ -136,40 +149,7 @@ class Molecule:
         return rotcon
 
 
-    def __get_starkeffect(self, state):
-        entry = self.__storage.getNode("/dcstarkeffect/" + state.hdfname())
-        data = entry.read(0)
-        return data['field'][0], data['energy'][0]
-    
-
-    def __set_starkeffect(self, state, energies, fields):
-        """Set potential |energies| for the specified |state| over the field-strength vector given in |fields|."""
-
-        assert len(fields) == len(energies)
-
-        class entry(tables.IsDescription):
-            name = tables.StringCol(32)
-            field = tables.Float64Col(len(fields))
-            energy = tables.Float64Col(len(energies))
-                
-        try:
-            group = self.__storage.root.dcstarkeffect
-        except:
-            group = self.__storage.createGroup('/', 'dcstarkeffect', 'DC Stark effect energy')
-        try:
-            table = self.__storage.removeNode("/dcstarkeffect/" + state.hdfname())
-        except:
-            pass
-        table = self.__storage.createTable(group, state.hdfname(), entry, "potential energy")
-        entry = table.row
-        entry['name'] = state.name()
-        entry['field'] = fields
-        entry['energy'] = energies
-        entry.append()
-        self.__storage.flush()
-
-
-    def starkeffect(self, state, energies=None, fields=None):
+    def starkeffect(self, state, fields=None, energies=None):
         """Get or set the potential energies as a function of the electric field strength.
 
         When |energies| and |fields| are None, return the Stark curve for the specified quantum state.
@@ -178,37 +158,65 @@ class Molecule:
         Molecule's HDF5 storage file.
         """
         if energies == None and fields == None:
-            return self.__get_starkeffect(state)
+            return jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/dcfield"), \
+                jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/dcstarkenergy"),
         elif energies == None or fields == None:
             raise SyntaxError
         else:
-            return self.__set_starkeffect(state, energies, fields)        
+            assert len(fields) == len(energies)
+            jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "dcfield", fields)
+            jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "dcstarkenergy", energies)
 
 
     def starkeffect_calculation(self, param):
         """Get all available energies from the given Starkeffect object and store them in our storage file."""
-        energies = {}
         if 'A' == param.type:
             for M in param.M:
+                energies = {}
                 for field in param.fields:
-                    calc = starkeffect.AsymmetricRotor(param, M, field)
+                    calc = jkext.starkeffect.AsymmetricRotor(param, M, field)
                     for state in calc.states():
                         id = state.id()
                         if energies.has_key(id):
                             energies[id].append(calc.energy(state))
                         else:
                             energies[id] = [calc.energy(state),]
+                # store calculated values for this M
+                for id in energies.keys():
+                    self.starkeffect_merge(State().fromid(id), param.fields, energies[id])
         else:
             raise NotImplementedError("unknow rotor type in Stark energy calculation.")
-        # store calculated values
-        for id in energies.keys():
-            self.starkeffect(State().fromid(id), energies[id], param.fields)
+
+
+    def starkeffect_merge(self, state, newfields=None, newenergies=None):
+        """Merge the specified pairs of field strength and Stark energies into the existing data.
+
+        not really tested
+        """
+        assert len(newfields) == len(newenergies)
+        try:
+            oldfields, oldenergies = self.starkeffect(state)
+            fields, energies = jkext.util.column_merge([oldfields, oldenergies], [newfields, newenergies])
+        except tables.exceptions.NodeError:
+            fields = newfields
+            energies = newenergies
+        self.starkeffect(state, fields, energies)
+
+
+    def starkeffect_states(self):
+        """Get a list of states for which we know the Stark effect."""
+        list = []
+        for group in self.__storage.listNodes(self.__storage.root, classname='Group'):
+            state = State().fromhdfname(group._v_name)
+            if 'dcfield' == group.dcfield.name and 'dcstarkenergy' == group.dcstarkenergy.name:
+                list.append(state)
+        return list
 
 
     def translate(self, translation):
         """Translate center of mass of molecule (i.e., translate all atoms)."""
         self.positions += translation
-            
+
 
 
 # some simple tests
@@ -219,17 +227,11 @@ if __name__ == "__main__":
     print state.name()
     # test Stark calculation and storage/retrieval
     from convert import *
-    param = starkeffect.CalculationParameter
+    param = jkext.starkeffect.CalculationParameter
     param.rotcon = Hz2J(num.array([5e9, 2e9, 1.5e9]))
     param.dipole = D2Cm(num.array([1., 0., 0.]))
     mol = Molecule(storage="molecule.hdf")
     mol.starkeffect_calculation(param)
-    for state in [State(0, 0, 0, 0), State(1, 0, 1, 1)]:
+    for state in [State(0, 0, 0, 0), State(1, 0, 1, 1), State(2, 1, 2, 1)]:
         fields, energies = mol.starkeffect(state)
-        print V_m2kV_cm(fields), J2Hz(energies)
-    
-
-
-### Local Variables:
-### fill-column: 132
-### End:
+        print V_m2kV_cm(fields), J2Hz(energies) / 1e9
