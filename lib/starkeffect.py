@@ -58,9 +58,9 @@ class CalculationParameter:
     Jmax_save = 2
     isomer = 0
     # molecular parameters
-    rotcon = num.zeros((3,))            # Joule
-    quartic = num.zeros((5,))           # Joule
-    dipole = num.zeros((3,))            # Coulomb meter
+    rotcon = num.zeros((3,), num.float64)    # Joule
+    quartic = num.zeros((5,), num.float64)   # Joule
+    dipole = num.zeros((3,), num.float64)    # Coulomb meter
     watson=None
     symmetry=None
 
@@ -79,10 +79,10 @@ class AsymmetricRotor:
         # we have not yet calculated the correct energies - mark invalid
         self.__valid = False
         # save parameters internally
-        self.__field = float(field)
-        self.__rotcon = num.array(param.rotcon)
-        self.__quartic = num.array(param.quartic)
-        self.__dipole = num.array(param.dipole)
+        self.__field = num.float64(field)
+        self.__rotcon = num.array(param.rotcon, num.float64)
+        self.__quartic = num.array(param.quartic, num.float64)
+        self.__dipole = num.array(param.dipole, num.float64)
         self.__watson = param.watson
         self.__symmetry = param.symmetry
         # save quantum numbers
@@ -169,7 +169,7 @@ class AsymmetricRotor:
         else:
             assert self.__watson == None
         # fill matrix with appropriate Stark terms for nonzero fields
-        if self.__tiny < abs(field):
+        if self.__tiny < abs(self.__field):
             self.__stark()
 
 
@@ -256,7 +256,7 @@ class AsymmetricRotor:
         """Wang transform matrix and return a dictionary with the individual (sub)matrices."""
         blocks = {}
         # set up Wang matrix
-        Wmat = num.zeros(self.__hmat.shape)
+        Wmat = num.zeros(self.__hmat.shape, num.float64)
         value = 1/num.sqrt(2.)
         for J in range(self.__Jmin, self.__Jmax + 1):
             for K in range(-J, 0):
