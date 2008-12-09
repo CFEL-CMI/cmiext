@@ -205,8 +205,43 @@ class AsymmetricRotor:
             J = self.__Jmax
             for K in range(-J, J+1):
                 self.__hmat[self.__index(J, K), self.__index(J, K)] += -1. * M * K / (J*(J+1)) * muA * field
-
-
+        if self.__tiny < abs(muC) and self.__tiny < abs(field):
+            # matrix elements involving µ_c
+            for J in range(self.__Jmin, self.__Jmax):
+                for K in range(-J, J+1):
+                    if 0 != J:
+                        value = -1. * M * muC * field * (sqrt((J-K) * (J+K+1) ) ) / ( 2*J*(J+1))
+                        self.__hmat[self.__index(J, K+1), self.__index(J, K)] += value
+                        self.__hmat[self.__index(J, K), self.__index(J, K+1)] += value
+                        #K+1 case
+                        value = (sqrt( (J+K+1) * (J+K+2) ) * sqrt( (J+1)*(J+1) - M**2  )
+                                 / ( 2*(J+1) * sqrt( (2*J+1) * (2*J+3) ) ) * muC * field)
+                        self.__hmat[self.__index(J+1, K+1), self.__index(J, K)] += value
+                        self.__hmat[self.__index(J, K), self.__index(J+1, K+1)] += value
+                        #K-1 case
+                        value = ((-1)*sqrt( (J-K+1) * (J-K+2) ) * sqrt( (J+1)**2 - M**2  )
+                                 / ( 2*(J+1) * sqrt( (2*J+1) * (2*J+3) ) ) * muC * field)
+                        self.__hmat[self.__index(J+1, K-1), self.__index(J, K)] += value
+                        self.__hmat[self.__index(J, K), self.__index(J+1, K-1)] += value
+        if self.__tiny < abs(muB) and self.__tiny < abs(field):
+            # matrix elements involving µ_b
+            for J in range(self.__Jmin, self.__Jmax):
+                for K in range(-J, J+1):
+                    if 0 != J:
+                        value = (1j)* M * muB * field * sqrt((J-K) * (J+K+1))) / (2*J*(J+1))
+                        self.__hmat[self.__index(J, K+1), self.__index(J, K)] += value
+                        self.__hmat[self.__index(J, K), self.__index(J, K+1)] += value
+                        #K+1 case
+                        value = ((-1*j) * sqrt( (J+K+1) * (J+K+2) ) * sqrt( (J+1)**2 - M**2  )
+                                 / ( 2*(J+1) * sqrt( (2*J+1) * (2*J+3) ) ) * muB * field )
+                        self.__hmat[self.__index(J+1, K+1), self.__index(J, K)] += value
+                        self.__hmat[self.__index(J, K), self.__index(J+1, K+1)] += value
+                        #K-1 case
+                        value = ((-1*j) * sqrt( (J-K+1) * (J-K+2) ) * sqrt( (J+1)**2 - M**2  )
+                                 / ( 2*(J+1) * sqrt( (2*J+1) * (2*J+3) ) ) * muB * field )
+                        self.__hmat[self.__index(J+1, K-1), self.__index(J, K)] += value
+                        self.__hmat[self.__index(J, K), self.__index(J+1, K-1)] += value
+            
     def __stateorder(self, symmetry):
         """Return a list with all states for the given |symmetry| and the current calculation parameters (Jmin, Jmax).
 
