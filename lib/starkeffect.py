@@ -97,7 +97,7 @@ class AsymmetricRotor:
         assert self.__rotcon.shape == (3,)
         assert self.__quartic.shape == (5,)
         # some useful constants
-        self.__tiny = num.finfo(num.dtype(float)).tiny * 10
+        self.__tiny = num.finfo(num.dtype(num.float64)).tiny * 10
         self.__dipole_components = [self.__tiny < abs(self.__dipole[0]),
                                     self.__tiny < abs(self.__dipole[1]),
                                     self.__tiny < abs(self.__dipole[2])]
@@ -168,8 +168,9 @@ class AsymmetricRotor:
             self.__watson_S()
         else:
             assert self.__watson == None
-        # fill matrix with appropriate Stark terms
-        self.__stark()
+        # fill matrix with appropriate Stark terms for nonzero fields
+        if self.__tiny < abs(field):
+            self.__stark()
 
 
     def __rigid(self):
@@ -191,7 +192,7 @@ class AsymmetricRotor:
         field = self.__field
         M = self.__M
         muA, muB, muC = self.__dipole
-        if self.__tiny < abs(muA) and self.__tiny < abs(field):
+        if self.__dipole_components[0]:
             # matrix elements involving µ_a
             for J in range(self.__Jmin, self.__Jmax):
                 for K in range(-J, J+1):
@@ -205,7 +206,7 @@ class AsymmetricRotor:
             J = self.__Jmax
             for K in range(-J, J+1):
                 self.__hmat[self.__index(J, K), self.__index(J, K)] += -1. * M * K / (J*(J+1)) * muA * field
-        if self.__tiny < abs(muC) and self.__tiny < abs(field):
+        if self.__dipole_components[2]:
             # matrix elements involving µ_c
             for J in range(self.__Jmin, self.__Jmax):
                 for K in range(-J, J+1):
@@ -223,25 +224,26 @@ class AsymmetricRotor:
                                  / ( 2*(J+1) * sqrt( (2*J+1) * (2*J+3) ) ) * muC * field)
                         self.__hmat[self.__index(J+1, K-1), self.__index(J, K)] += value
                         self.__hmat[self.__index(J, K), self.__index(J+1, K-1)] += value
-        if self.__tiny < abs(muB) and self.__tiny < abs(field):
+        if  self.__dipole_components[1]:
             # matrix elements involving µ_b
             for J in range(self.__Jmin, self.__Jmax):
                 for K in range(-J, J+1):
                     if 0 != J:
-                        value = (1j)* M * muB * field * sqrt((J-K) * (J+K+1))) / (2*J*(J+1))
+                        value = 1j* M * muB * field * sqrt((J-K) * (J+K+1)) / (2*J*(J+1))
                         self.__hmat[self.__index(J, K+1), self.__index(J, K)] += value
                         self.__hmat[self.__index(J, K), self.__index(J, K+1)] += value
-                        #K+1 case
-                        value = ((-1*j) * sqrt( (J+K+1) * (J+K+2) ) * sqrt( (J+1)**2 - M**2  )
-                                 / ( 2*(J+1) * sqrt( (2*J+1) * (2*J+3) ) ) * muB * field )
+                        # J+1, K+1 / J-1, K-1 case
+                        value = (-1j * muB * field * sqrt((J+K+1) * (J+K+2)) * sqrt((J+1)**2 - M**2)
+                                  / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
                         self.__hmat[self.__index(J+1, K+1), self.__index(J, K)] += value
                         self.__hmat[self.__index(J, K), self.__index(J+1, K+1)] += value
-                        #K-1 case
-                        value = ((-1*j) * sqrt( (J-K+1) * (J-K+2) ) * sqrt( (J+1)**2 - M**2  )
-                                 / ( 2*(J+1) * sqrt( (2*J+1) * (2*J+3) ) ) * muB * field )
+                        # J+1, K-1 / J-1, K+1 case
+                        value = (-1j  * muB * field * sqrt((J-K+1) * (J-K+2)) * sqrt((J+1)**2 - M**2)
+                                  / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
                         self.__hmat[self.__index(J+1, K-1), self.__index(J, K)] += value
                         self.__hmat[self.__index(J, K), self.__index(J+1, K-1)] += value
-            
+
+
     def __stateorder(self, symmetry):
         """Return a list with all states for the given |symmetry| and the current calculation parameters (Jmin, Jmax).
 
