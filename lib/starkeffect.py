@@ -28,7 +28,8 @@ from jkext.state import State
 class CalculationParameter:
     """Container of parameters for calculation of Stark energies.
 
-    Calculate energy for the specified |fields| (V/m) and rotor type.
+    Calculate energy for the specified |fields| (V/m) and rotor type; all calculations are performed in representation
+    Ir (x, y, z -> b, c, a).
 
     General parameters:
     - type: specify the type of rotor, currently only 'A' is implemented.
