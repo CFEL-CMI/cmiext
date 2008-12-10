@@ -23,8 +23,7 @@ import numpy as num
 import numpy.linalg
 import const
 import tables
-
-import jkext.hdf5, jkext.starkeffect, jkext.util
+import jkext.hdf5, jkext.starkeffect, jkext.util, jkext.convert
 from jkext.state import State
 
 
@@ -228,10 +227,30 @@ if __name__ == "__main__":
     # test Stark calculation and storage/retrieval
     from convert import *
     param = jkext.starkeffect.CalculationParameter
-    param.rotcon = Hz2J(num.array([5e9, 2e9, 1.5e9]))
-    param.dipole = D2Cm(num.array([1., 0., 0.]))
+    param.isomer = 0
+    param.watson = 'A'
+    param.symmetry = None # 'a'
+    param.rotcon = Hz2J(num.array([5655.2654e6, 1546.875864e6, 1214.40399e6]))
+    param.quartic = Hz2J(num.array([45.6, 938.1, 500, 10.95, 628]))
+    # param.dipole = D2Cm(num.array([4.5152, 0., 0.]))
+    param.dipole = D2Cm(num.array([1., 1., 1.]))
+    # calculation details
+    param.M = [0]
+    param.Jmin = 0
+    param.Jmax_calc = 15
+    param.Jmax_save = 10
+    param.fields = kV_cm2V_m(num.array([0., 100.]))
+
     mol = Molecule(storage="molecule.hdf")
     mol.starkeffect_calculation(param)
-    for state in [State(0, 0, 0, 0), State(1, 0, 1, 1), State(2, 1, 2, 1)]:
-        fields, energies = mol.starkeffect(state)
-        print V_m2kV_cm(fields), J2Hz(energies) / 1e9
+    for J in range (10, 11):
+        Ka = 0
+        for Kc in range(J, -1, -1):
+            state = State(J, Ka, Kc, 0, 0)
+            fields, energies = mol.starkeffect(state)
+            print state.name(), V_m2kV_cm(fields), J2Hz(energies) / 1e6
+            if Kc > 0:
+                Ka += 1
+                state = State(J, Ka, Kc, 0, 0)
+                fields, energies = mol.starkeffect(state)
+                print state.name(), V_m2kV_cm(fields), J2Hz(energies) / 1e6
