@@ -137,7 +137,8 @@ class AsymmetricRotor:
 
 
     def __recalculate(self):
-        """Needs to be finished!"""
+        """Perform calculation of rotational state energies for current parameters"""
+        print "Recalculating rotational energies"""
         self.__levels = {}
         self.__full_hamiltonian()
         blocks = self.__wang()
