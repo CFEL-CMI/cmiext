@@ -8,7 +8,7 @@
 # License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
 # version.
 #
-# If you use this programm for scietific work, you must correctly reference it; see LICENSE file for details.
+# If you use this programm for scientific work, you must correctly reference it; see LICENSE file for details.
 #
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
 # warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -104,7 +104,6 @@ class AsymmetricRotor:
                                     self.__tiny < abs(self.__dipole[2])]
 
 
-
     def energy(self, state):
         """Return Stark energy for |state|."""
         if self.__valid == False:
@@ -156,9 +155,11 @@ class AsymmetricRotor:
 
     def __full_hamiltonian(self):
         # create hamiltonian matrix
-        if True == self.__dipole_components[2]: # µ_c != 0
+        if True == self.__dipole_components[2]:
+            # if µ_c != 0, the matrix is complex (and hermitean)
             self.__hmat = num.zeros((self.__matrixsize, self.__matrixsize), num.complex128)
         else:
+            # otherwise the matrix is real (and symmetric)
             self.__hmat = num.zeros((self.__matrixsize, self.__matrixsize), num.float64)
         # start matrix with appropriate field-free rigid-rotor terms
         self.__rigid()
@@ -182,7 +183,7 @@ class AsymmetricRotor:
             for K in range(-J, J+1):
                 self.__hmat[self.__index(J, K), self.__index(J, K)] += (B+C)/2 * (J*(J+1) - K**2) + A * K**2
             for K in range (-J, J-2+1):
-                value = (B-C)/4 * sqrt((J*(J+1) - (K+1)*(K+2)) * (J*(J+1) - K*(K+1)))
+                value = (B-C)/4 * sqrt((J*(J+1) - K*(K+1)) * (J*(J+1) - (K+1)*(K+2)))
                 self.__hmat[self.__index(J, K+2), self.__index(J, K)] += value
                 self.__hmat[self.__index(J, K), self.__index(J, K+2)] += value
 
@@ -211,20 +212,19 @@ class AsymmetricRotor:
         if self.__dipole_components[1]:
             # matrix elements involving µ_b
             for J in range(self.__Jmin, self.__Jmax):
-                print "muB, J =", J
                 for K in range(-J, J+1):
                     if 0 != J:
-                        value = -1. * M * muB * field * (sqrt((J-K) * (J+K+1) ) ) / ( 2*J*(J+1))
+                        value = -1 * M * muB * field * (sqrt((J-K) * (J+K+1) ) ) / (2*J*(J+1))
                         self.__hmat[self.__index(J, K+1), self.__index(J, K)] += value
                         self.__hmat[self.__index(J, K), self.__index(J, K+1)] += value
                     # J+1, K+1 / J-1, K-1 case
-                    value = (sqrt( (J+K+1) * (J+K+2) ) * sqrt( (J+1)*(J+1) - M**2  )
-                             / ( 2*(J+1) * sqrt( (2*J+1) * (2*J+3) ) ) * muB * field)
+                    value = (muB * field * sqrt(((J+K+1) * (J+K+2)) * ((J+1)**2 - M**2))
+                             / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
                     self.__hmat[self.__index(J+1, K+1), self.__index(J, K)] += value
                     self.__hmat[self.__index(J, K), self.__index(J+1, K+1)] += value
                     # J+1, K-1 / J-1, K+1 case
-                    value = (-1*sqrt( (J-K+1) * (J-K+2) ) * sqrt( (J+1)**2 - M**2  )
-                              / ( 2*(J+1) * sqrt( (2*J+1) * (2*J+3) ) ) * muB * field)
+                    value = (-1 * muB * field * sqrt(((J-K+1) * (J-K+2)) * ((J+1)**2 - M**2))
+                              / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
                     self.__hmat[self.__index(J+1, K-1), self.__index(J, K)] += value
                     self.__hmat[self.__index(J, K), self.__index(J+1, K-1)] += value
         if  self.__dipole_components[2]:
@@ -306,11 +306,11 @@ class AsymmetricRotor:
         DJ, DJK, DK, dJ, dK = self.__quartic.tolist()
         for J in range(self.__Jmin, self.__Jmax+1):
             for K in range(-J, J+1):
-                value = DJ * (J*(J+1))**2 - DJK * J*(J+1) * K**2 - DK * K**4
+                value = -DJ * (J*(J+1))**2 - DJK * J*(J+1)*K**2 - DK * K**4
                 self.__hmat[self.__index(J, K), self.__index(J, K)] += value
             for K in range (-J, J-2+1):
                 value = ((-dJ * J*(J+1) - dK/2 * ((K+2)**2 + K**2))
-                         * sqrt((J*(J+1) - (K+1)*(K+2)) * (J*(J+1) - K*(K+1))))
+                         * sqrt((J*(J+1) - K*(K+1)) * (J*(J+1) - (K+1)*(K+2))))
                 self.__hmat[self.__index(J, K+2), self.__index(J, K)] += value
                 self.__hmat[self.__index(J, K), self.__index(J, K+2)] += value
 
@@ -326,5 +326,10 @@ if __name__ == "__main__":
     print
     p = CalculationParameter
     p.rotcon = num.array([5e9, 2e9, 1.5e9])
+    p.quartic = num.array([1e3, 1e3, 1e3, 1e3, 1e3])
+    p.watson = 'A'
     top = AsymmetricRotor(p, 0, 0)
-    print top.energy(State(0, 0, 0, 0, 0)) / 1e6
+    for state in [State(0, 0, 0, 0, 0),
+                  State(1, 0, 1, 0, 0), State(1, 1, 1, 0, 0), State(1, 1, 0, 0, 0),
+                  State(2, 1, 2, 0, 0)]:
+        print state.name(), "%10.3f" % (top.energy(state) / 1e6,)
