@@ -8,7 +8,7 @@
 # License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
 # version.
 #
-# If you use this programm for scietific work, you must correctly reference it; see LICENSE file for details.
+# If you use this programm for scientific work, you must correctly reference it; see LICENSE file for details.
 #
 # This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
 # warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
@@ -185,6 +185,7 @@ class Molecule:
                     self.starkeffect_merge(State().fromid(id), param.fields, energies[id])
         else:
             raise NotImplementedError("unknow rotor type in Stark energy calculation.")
+        self.__storage.flush()
 
 
     def starkeffect_merge(self, state, newfields=None, newenergies=None):
@@ -220,6 +221,7 @@ class Molecule:
 
 # some simple tests
 if __name__ == "__main__":
+    print
     # test State
     state = State(0, 0, 0, 0)
     state.fromid(1000001)
@@ -230,20 +232,19 @@ if __name__ == "__main__":
     param.isomer = 0
     param.watson = 'A'
     param.symmetry = None # 'a'
-    param.rotcon = Hz2J(num.array([5655.2654e6, 1546.875864e6, 1214.40399e6]))
-    param.quartic = Hz2J(num.array([45.6, 938.1, 500, 10.95, 628]))
-    # param.dipole = D2Cm(num.array([4.5152, 0., 0.]))
-    param.dipole = D2Cm(num.array([1., 1., 1.]))
+    param.rotcon = Hz2J(num.array([5000e6, 1500e6, 1200e6]))
+    param.quartic = Hz2J(num.array([50., 1000., 500, 10., 600]))
+    param.dipole = D2Cm(num.array([5, 0., 0.]))
     # calculation details
     param.M = [0]
     param.Jmin = 0
-    param.Jmax_calc = 15
-    param.Jmax_save = 10
-    param.fields = kV_cm2V_m(num.array([0., 100.]))
-
+    param.Jmax_calc = 10
+    param.Jmax_save = 5
+    param.fields = kV_cm2V_m(num.array([0., 10., 50., 100.]))
+    # save and print
     mol = Molecule(storage="molecule.hdf")
     mol.starkeffect_calculation(param)
-    for J in range (10, 11):
+    for J in range (0, 3):
         Ka = 0
         for Kc in range(J, -1, -1):
             state = State(J, Ka, Kc, 0, 0)
