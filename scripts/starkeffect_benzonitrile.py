@@ -45,7 +45,7 @@ param = starkeffect.CalculationParameter
 param.isomer = 0
 param.watson = 'A'
 param.symmetry = None # 'a'
-param.rotcon = convert.Hz2J(num.array([5655.2654e6, 1546.875864e6, 1214.40399]))
+param.rotcon = convert.Hz2J(num.array([5655.2654e6, 1546.875864e6, 1214.40399e6]))
 param.quartic = convert.Hz2J(num.array([45.6, 938.1, 500, 10.95, 628]))
 param.dipole = convert.D2Cm(num.array([4.5152, 0., 0.]))
 # calculation details

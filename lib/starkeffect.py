@@ -194,7 +194,6 @@ class AsymmetricRotor:
         field = self.__field
         M = self.__M
         muA, muB, muC = self.__dipole
-        print muA, muB, muC
         if self.__dipole_components[0]:
             # matrix elements involving µ_a
             for J in range(self.__Jmin, self.__Jmax):
