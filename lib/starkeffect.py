@@ -19,6 +19,7 @@ from __future__ import division
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
+# really use scipy s numpy, so we are sure we use Fortran codes of eigvalsh and dgemm
 import scipy as num
 import scipy.linalg
 import scipy.linalg.fblas
