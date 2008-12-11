@@ -19,8 +19,9 @@ from __future__ import division
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
-import numpy as num
-import numpy.linalg
+import scipy as num
+import scipy.linalg
+import scipy.linalg.fblas
 import jkext.convert
 from jkext.state import State
 
@@ -344,7 +345,8 @@ class AsymmetricRotor:
                 Wmat[self.__index(J, -K), self.__index(J, -K)] = value
             Wmat[self.__index(J, 0), self.__index(J, 0)] = 1.
         # transform Hamiltonian matrix
-        hmat = num.dot(num.dot(Wmat, hmat), Wmat)
+        dot = lambda a, b: scipy.linalg.fblas.dgemm(1., a, b)
+        hmat = dot(dot(Wmat, hmat), Wmat)
         # delete Wang matrix (it's not used anymore)
         del Wmat
         # sort out matrix blocks
