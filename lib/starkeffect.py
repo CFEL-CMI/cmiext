@@ -261,72 +261,65 @@ class AsymmetricRotor:
         """
         if False == self.__stateorder_valid:
             self.__stateorder_dict = {}
-                for J in range(self.__M,self.__Jmax, 1):
-                    EplusLabel = []
-                    EminusLabel = []
-                    OplusLabel = []
-                    OminusLabel = []
-                    Ka = 0
-                    if (0 == J%2): # J even
-                        for Kc in range(J,-1,-1):
-                            if ((Ka%2==0) and  (Kc%2==0)):
-                                EplusLabel.append(State(J,Ka,Kc,M,0)) 
-                            elif ((Ka%2==0) and  (Kc%2!=0)):
-                                EminusLabel.append(State(J,Ka,Kc,M,0))
-                            elif ((Ka%2!=0) and  (Kc%2==0)):
-                                OplusLabel.append(State(J,Ka,Kc,M,0))
-                            else: # if((Ka%2!=0) and  (Kc%2!=0)) 
-                                OminusLabel.append(State(J,Ka,Kc,M,0))
-                            if (Kc > 0):
-                                Ka = Ka+1
-                                if ((Ka%2==0) and  (Kc%2==0)):
-                                    EplusLabel.append(State(J,Ka,Kc,M,0))
-                                elif ((Ka%2==0) and  (Kc%2!=0)):
-                                    EminusLabel.append(State(J,Ka,Kc,M,0))
-                                elif ((Ka%2!=0) and  (Kc%2==0)):
-                                    OplusLabel.append(State(J,Ka,Kc,M,0))
-                                else: # if((Ka%2!=0) and  (Kc%2!=0)) 
-                                    OminusLabel.append(State(J,Ka,Kc,M,0))
-                    else: # J odd
-                        for Kc in range(J,-1,-1):
-                            if ((Ka%2==0) and  (Kc%2==0)):
-                                EminusLabel.append(State(J,Ka,Kc,M,0)) 
-                            elif ((Ka%2==0) and  (Kc%2!=0)):
-                                EplusLabel.append(State(J,Ka,Kc,M,0))
-                            elif ((Ka%2!=0) and  (Kc%2==0)):
-                                OminusLabel.append(State(J,Ka,Kc,M,0))
-                            else: # if((Ka%2!=0) and  (Kc%2!=0)) 
-                                OplusLabel.append(State(J,Ka,Kc,M,0))
-                            if (Kc > 0):
-                                Ka = Ka+1
-                                if ((Ka%2==0) and  (Kc%2==0)):
-                                    EminusLabel.append(State(J,Ka,Kc,M,0))
-                                elif ((Ka%2==0) and  (Kc%2!=0)):
-                                    EplusLabel.append(State(J,Ka,Kc,M,0))
-                                elif ((Ka%2!=0) and  (Kc%2==0)):
-                                    OminusLabel.append(State(J,Ka,Kc,M,0))
-                                else: # if((Ka%2!=0) and  (Kc%2!=0)) 
-                                    OplusLabel.append(State(J,Ka,Kc,M,0))
-                    blocks = self.__full_hamiltonian(J, J) # get block diagonal hamiltonian
-                    for symmetry in blocks.keys():
-                        eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate energies
-                        eval = num.sort(eval) # sort energies for each block
-                        # create pair Statelabel / energy and append to some long list 
-            
+            M = self.__M
+            iso = self.__isomer
+            symmetries= ['Ep', 'Em', 'Op', 'Om']
+            assignment = {'Ep': [], 'Em': [], 'Op': [], 'Om': []}
+            label = {'Ep': [], 'Em': [], 'Op': [], 'Om': []}
+            for J in range(self.__M, self.__Jmax+1):
+                Ka = 0
+                if 0 == J%2: # J even
+                    for Kc in range(J,-1,-1):
+                        if Ka%2 == 0 and Kc%2 == 0:  label['Ep'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 == 0 and Kc%2 !=0: label['Em'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 != 0 and Kc%2 ==0: label['Op'].append(State(J, Ka, Kc, M, iso))
+                        else:                        label['Om'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                        if Kc > 0:
+                            Ka = Ka+1
+                            if Ka%2 == 0 and Kc%2 == 0:   label['Ep'].append(State(J, Ka, Kc, M, iso))
+                            elif Ka%2 == 0 and Kc%2 != 0: label['Em'].append(State(J, Ka, Kc, M, iso))
+                            elif Ka%2 != 0 and Kc%2 == 0: label['Op'].append(State(J, Ka, Kc, M, iso))
+                            else:                         label['Om'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                else: # J odd
+                    for Kc in range(J,-1,-1):
+                        if Ka%2 ==0 and Kc%2 == 0:    label['Em'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 ==0 and Kc%2 != 0:  label['Ep'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 !=0 and Kc%2 == 0:  label['Om'].append(State(J, Ka, Kc, M, iso))
+                        else:                         label['Op'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                        if Kc > 0:
+                            Ka = Ka+1
+                            if ((Ka%2==0) and  (Kc%2==0)):   label['Em'].append(State(J, Ka, Kc, M, iso))
+                            elif ((Ka%2==0) and  (Kc%2!=0)): label['Ep'].append(State(J, Ka, Kc, M, iso))
+                            elif ((Ka%2!=0) and  (Kc%2==0)): label['Om'].append(State(J, Ka, Kc, M, iso))
+                            else:                            label['Op'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                # get block diagonal hamiltonian (make sure you calculate this in 'V'!)
+                if 0 == J:
+                    blocks = {'Ep': num.zeros((1, 1), num.float64)}
+                else:
+                    blocks = self.__full_hamiltonian(J, J)
+                # create assignments energies -> labels
+                for sym in blocks.keys():
+                    eval = num.sort(num.linalg.eigvalsh(blocks[sym]))
+                    assignment[sym] += zip(eval, label[sym])
+            # sort assignments according to energy
+            for sym in symmetries:
+                idx = num.argsort(assignments[sym][:, 0])
+                assignment = assignment[sym][idx]
             if 'V' == self.__symmetry:
-                self.__stateorder_dict['Ep'] = self.states()
-                self.__stateorder_dict['Em'] = self.states()
-                self.__stateorder_dict['Op'] = self.states()
-                self.__stateorder_dict['Om'] = self.states()
+                self.__stateorder_dict['Ep'] = assignment['Ep'][:,1]
+                self.__stateorder_dict['Em'] = assignment['Em'][:,1]
+                self.__stateorder_dict['Op'] = assignment['Op'][:,1]
+                self.__stateorder_dict['Om'] = assignment['Om'][:,1]
             elif 'C2a' == self.__symmetry:
                 # merge EplusOrder, EminusOrder and OplusOrder,OminusOrder
-                self.__stateorder_dict['E'] = self.states()
-                self.__stateorder_dict['O'] = self.states()
+                self.__stateorder_dict['E'] = assignment['Ep'][:,1] + assignment['Em'][:,1]
+                self.__stateorder_dict['O'] = assignment['Op'][:,1] + assignment['Om'][:,1]
             elif None == self.__symmetry:
                 # merge all four into one....
-                self.__stateorder_dict['N'] = self.states()
+                self.__stateorder_dict['N'] = (assignment['Ep'][:,1] + assignment['Em'][:,1]
+                                               + assignment['Op'][:,1] + assignment['Om'][:,1])
             else:
-                raise NotImplementedError("This is not implemented")
+                raise NotImplementedError("Hamiltonian symmetry not implemented (yet)")
             self._stateorder_valid = True
         return self.__stateorder_dict[symmetry]
 
@@ -337,7 +330,7 @@ class AsymmetricRotor:
         # set up Wang matrix
         Wmat = num.zeros(hmat.shape, num.float64)
         value = 1/num.sqrt(2.)
-        for J in range(Jmin, Jmax + 1):
+        for J in range(Jmin, Jmax, 1):
             for K in range(-J, 0):
                 Wmat[self.__index(J,  K), self.__index(J,  K)] = -value
                 Wmat[self.__index(J, -K), self.__index(J,  K)] = value
