@@ -260,9 +260,72 @@ class AsymmetricRotor:
         """
         if False == self.__stateorder_valid:
             self.__stateorder_dict = {}
-            # set up internal dictionary
-            if None == self.__symmetry:
+                for J in range(self.__M,self.__Jmax, 1):
+                    EplusLabel = []
+                    EminusLabel = []
+                    OplusLabel = []
+                    OminusLabel = []
+                    Ka = 0
+                    if (0 == J%2): # J even
+                        for Kc in range(J,-1,-1):
+                            if ((Ka%2==0) and  (Kc%2==0)):
+                                EplusLabel.append(State(J,Ka,Kc,M,0)) 
+                            elif ((Ka%2==0) and  (Kc%2!=0)):
+                                EminusLabel.append(State(J,Ka,Kc,M,0))
+                            elif ((Ka%2!=0) and  (Kc%2==0)):
+                                OplusLabel.append(State(J,Ka,Kc,M,0))
+                            else: # if((Ka%2!=0) and  (Kc%2!=0)) 
+                                OminusLabel.append(State(J,Ka,Kc,M,0))
+                            if (Kc > 0):
+                                Ka = Ka+1
+                                if ((Ka%2==0) and  (Kc%2==0)):
+                                    EplusLabel.append(State(J,Ka,Kc,M,0))
+                                elif ((Ka%2==0) and  (Kc%2!=0)):
+                                    EminusLabel.append(State(J,Ka,Kc,M,0))
+                                elif ((Ka%2!=0) and  (Kc%2==0)):
+                                    OplusLabel.append(State(J,Ka,Kc,M,0))
+                                else: # if((Ka%2!=0) and  (Kc%2!=0)) 
+                                    OminusLabel.append(State(J,Ka,Kc,M,0))
+                    else: # J odd
+                        for Kc in range(J,-1,-1):
+                            if ((Ka%2==0) and  (Kc%2==0)):
+                                EminusLabel.append(State(J,Ka,Kc,M,0)) 
+                            elif ((Ka%2==0) and  (Kc%2!=0)):
+                                EplusLabel.append(State(J,Ka,Kc,M,0))
+                            elif ((Ka%2!=0) and  (Kc%2==0)):
+                                OminusLabel.append(State(J,Ka,Kc,M,0))
+                            else: # if((Ka%2!=0) and  (Kc%2!=0)) 
+                                OplusLabel.append(State(J,Ka,Kc,M,0))
+                            if (Kc > 0):
+                                Ka = Ka+1
+                                if ((Ka%2==0) and  (Kc%2==0)):
+                                    EminusLabel.append(State(J,Ka,Kc,M,0))
+                                elif ((Ka%2==0) and  (Kc%2!=0)):
+                                    EplusLabel.append(State(J,Ka,Kc,M,0))
+                                elif ((Ka%2!=0) and  (Kc%2==0)):
+                                    OminusLabel.append(State(J,Ka,Kc,M,0))
+                                else: # if((Ka%2!=0) and  (Kc%2!=0)) 
+                                    OplusLabel.append(State(J,Ka,Kc,M,0))
+                    blocks = self.__full_hamiltonian(J, J) # get block diagonal hamiltonian
+                    for symmetry in blocks.keys():
+                        eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate energies
+                        eval = num.sort(eval) # sort energies for each block
+                        # create pair Statelabel / energy and append to some long list 
+            
+            if 'V' == self.__symmetry:
+                self.__stateorder_dict['Ep'] = self.states()
+                self.__stateorder_dict['Em'] = self.states()
+                self.__stateorder_dict['Op'] = self.states()
+                self.__stateorder_dict['Om'] = self.states()
+            elif 'C2a' == self.__symmetry:
+                # merge EplusOrder, EminusOrder and OplusOrder,OminusOrder
+                self.__stateorder_dict['E'] = self.states()
+                self.__stateorder_dict['O'] = self.states()
+            elif None == self.__symmetry:
+                # merge all four into one....
                 self.__stateorder_dict['N'] = self.states()
+            else:
+                raise NotImplementedError("This is not implemented")
             self._stateorder_valid = True
         return self.__stateorder_dict[symmetry]
 
