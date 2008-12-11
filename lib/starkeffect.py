@@ -79,13 +79,14 @@ class AsymmetricRotor:
         assert 'A' == param.type.upper()
         # we have not yet calculated the correct energies - mark invalid
         self.__valid = False
+        self.__stateorder_valid = False
         # save parameters internally
         self.__field = num.float64(field)
         self.__rotcon = num.array(param.rotcon, num.float64)
         self.__quartic = num.array(param.quartic, num.float64)
         self.__dipole = num.array(param.dipole, num.float64)
         self.__watson = param.watson
-        self.__symmetry = param.symmetry
+        self.__symmetry = param.symmetry # symmetry of Hamiltonian (possible values: 'N', 'C2a', 'C2b', 'C2c', 'V')
         # save quantum numbers
         self.__M = int(M) # use the single spefied M
         self.__isomer = int(param.isomer)
@@ -129,8 +130,10 @@ class AsymmetricRotor:
         return list
 
 
-    def __index(self, J, K, matrixsize_Jmin):
-        blockstart = J*(J-1) + J - matrixsize_Jmin
+    def __index(self, J, K):
+        # this requires a correct "global" value of self.__Jmin_matrixsize, which is set in __full_hamiltonian.
+        # Therefore, we must be called only through __full_hamiltonian
+        blockstart = J*(J-1) + J - self.__Jmin_matrixsize
         return blockstart + K + J
 
 
@@ -138,8 +141,7 @@ class AsymmetricRotor:
         """Perform calculation of rotational state energies for current parameters"""
         print "Recalculating rotational energies"""
         self.__levels = {}
-        hmat = self.__full_hamiltonian(self.__Jmin, self.__Jmax)
-        blocks = self.__wang(hmat, self.__Jmin, self.__Jmax)
+        blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax)
         for symmetry in blocks.keys():
             eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate only energies
             eval = num.sort(eval)
@@ -153,8 +155,9 @@ class AsymmetricRotor:
 
 
     def __full_hamiltonian(self, Jmin, Jmax):
-        matrixsize_Jmin = Jmin *(Jmin-1) + Jmin
-        matrixsize = (Jmax + 1) * Jmax + Jmax + 1 - matrixsize_Jmin
+        """Return block-diagonalized Hamiltonian matrix (blocks)"""
+        self.__Jmin_matrixsize = Jmin *(Jmin-1) + Jmin
+        matrixsize = (Jmax + 1) * Jmax + Jmax + 1 - self.__Jmin_matrixsize
         # create hamiltonian matrix
         if True == self.__dipole_components[2]:
             # if µ_c != 0, the matrix is complex (and hermitean)
@@ -174,27 +177,27 @@ class AsymmetricRotor:
         # fill matrix with appropriate Stark terms for nonzero fields
         if self.__tiny < abs(self.__field):
             self.__stark(hmat, Jmin, Jmax)
-        return hmat
+        blocks = self.__wang(hmat, self.__Jmin, self.__Jmax)
+        del hmat
+        return blocks
 
 
     def __rigid(self, hmat, Jmin, Jmax):
         """Add the rigid-rotor matrix element terms to hmat"""
         sqrt = num.sqrt
-        matrixsize_Jmin = Jmin *(Jmin-1) + Jmin
         A, B, C = self.__rotcon.tolist()
         for J in range(Jmin, Jmax+1):
             for K in range(-J, J+1):
-                hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += (B+C)/2 * (J*(J+1) - K**2) + A * K**2
+                hmat[self.__index(J, K), self.__index(J, K)] += (B+C)/2 * (J*(J+1) - K**2) + A * K**2
             for K in range (-J, J-2+1):
                 value = (B-C)/4 * sqrt((J*(J+1) - K*(K+1)) * (J*(J+1) - (K+1)*(K+2)))
-                hmat[self.__index(J, K+2, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
-                hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J, K+2, matrixsize_Jmin)] += value
+                hmat[self.__index(J, K+2), self.__index(J, K)] += value
+                hmat[self.__index(J, K), self.__index(J, K+2)] += value
 
 
     def __stark(self, hmat, Jmin, Jmax):
         """Add the Stark-effect matrix element terms to hmat"""
         sqrt = num.sqrt
-        matrixsize_Jmin = Jmin *(Jmin-1) + Jmin
         field = self.__field
         M = self.__M
         muA, muB, muC = self.__dipole
@@ -203,51 +206,51 @@ class AsymmetricRotor:
             for J in range(Jmin, Jmax):
                 for K in range(-J, J+1):
                     if 0 != J:
-                        hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += -muA * field * M * K / (J*(J+1))
+                        hmat[self.__index(J, K), self.__index(J, K)] += -muA * field * M * K / (J*(J+1))
                     value = (-muA * field * sqrt((J+1)**2 - K**2) * sqrt((J+1)**2 - M**2)
                               / ((J+1) * sqrt((2*J+1) * (2*J+3))))
-                    hmat[self.__index(J+1, K, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
-                    hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J+1, K, matrixsize_Jmin)] += value
+                    hmat[self.__index(J+1, K), self.__index(J, K)] += value
+                    hmat[self.__index(J, K), self.__index(J+1, K)] += value
             # final diagonal elements
             J = Jmax
             for K in range(-J, J+1):
-                hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += -1. * M * K / (J*(J+1)) * muA * field
+                hmat[self.__index(J, K), self.__index(J, K)] += -1. * M * K / (J*(J+1)) * muA * field
         if self.__dipole_components[1]:
             # matrix elements involving µ_b
             for J in range(Jmin, Jmax):
                 for K in range(-J, J+1):
                     if 0 != J:
                         value = -1 * M * muB * field * (sqrt((J-K) * (J+K+1) ) ) / (2*J*(J+1))
-                        hmat[self.__index(J, K+1, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
-                        hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J, K+1, matrixsize_Jmin)] += value
+                        hmat[self.__index(J, K+1), self.__index(J, K)] += value
+                        hmat[self.__index(J, K), self.__index(J, K+1)] += value
                     # J+1, K+1 / J-1, K-1 case
                     value = (muB * field * sqrt(((J+K+1) * (J+K+2)) * ((J+1)**2 - M**2))
                              / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
-                    hmat[self.__index(J+1, K+1, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
-                    hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J+1, K+1, matrixsize_Jmin)] += value
+                    hmat[self.__index(J+1, K+1), self.__index(J, K)] += value
+                    hmat[self.__index(J, K), self.__index(J+1, K+1)] += value
                     # J+1, K-1 / J-1, K+1 case
                     value = (-1 * muB * field * sqrt(((J-K+1) * (J-K+2)) * ((J+1)**2 - M**2))
                               / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
-                    hmat[self.__index(J+1, K-1, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
-                    hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J+1, K-1, matrixsize_Jmin)] += value
+                    hmat[self.__index(J+1, K-1), self.__index(J, K)] += value
+                    hmat[self.__index(J, K), self.__index(J+1, K-1)] += value
         if  self.__dipole_components[2]:
             # matrix elements involving µ_c
             for J in range(Jmin, Jmax):
                 for K in range(-J, J+1):
                     if 0 != J:
                         value = 1j* M * muC * field * sqrt((J-K) * (J+K+1)) / (2*J*(J+1))
-                        hmat[self.__index(J, K+1, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
-                        hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J, K+1, matrixsize_Jmin)] += value
+                        hmat[self.__index(J, K+1), self.__index(J, K)] += value
+                        hmat[self.__index(J, K), self.__index(J, K+1)] += value
                     # J+1, K+1 / J-1, K-1 case
                     value = (-1j * muC * field * sqrt((J+K+1) * (J+K+2)) * sqrt((J+1)**2 - M**2)
                               / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
-                    hmat[self.__index(J+1, K+1, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
-                    hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J+1, K+1, matrixsize_Jmin)] += value
+                    hmat[self.__index(J+1, K+1), self.__index(J, K)] += value
+                    hmat[self.__index(J, K), self.__index(J+1, K+1)] += value
                     # J+1, K-1 / J-1, K+1 case
                     value = (-1j  * muC * field * sqrt((J-K+1) * (J-K+2)) * sqrt((J+1)**2 - M**2)
                               / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
-                    hmat[self.__index(J+1, K-1, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
-                    hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J+1, K-1, matrixsize_Jmin)] += value
+                    hmat[self.__index(J+1, K-1), self.__index(J, K)] += value
+                    hmat[self.__index(J, K), self.__index(J+1, K-1)] += value
 
 
     def __stateorder(self, symmetry):
@@ -255,40 +258,43 @@ class AsymmetricRotor:
 
         Needs to be finished!
         """
-        if False == __stateorder_valid:
+        if False == self.__stateorder_valid:
+            self.__stateorder_dict = {}
             # set up internal dictionary
-            
+            if None == self.__symmetry:
+                self.__stateorder_dict['N'] = self.states()
             self._stateorder_valid = True
-        return self.__stateorderdict[symmetry]
+        return self.__stateorder_dict[symmetry]
 
 
     def __wang(self, hmat, Jmin, Jmax):
         """Wang transform matrix and return a dictionary with the individual (sub)matrices."""
         blocks = {}
-        matrixsize_Jmin = Jmin *(Jmin-1) + Jmin
         # set up Wang matrix
         Wmat = num.zeros(hmat.shape, num.float64)
         value = 1/num.sqrt(2.)
         for J in range(Jmin, Jmax + 1):
             for K in range(-J, 0):
-                Wmat[self.__index(J,  K, matrixsize_Jmin), self.__index(J,  K, matrixsize_Jmin)] = -value
-                Wmat[self.__index(J, -K, matrixsize_Jmin), self.__index(J,  K, matrixsize_Jmin)] = value
-                Wmat[self.__index(J,  K, matrixsize_Jmin), self.__index(J, -K, matrixsize_Jmin)] = value
-                Wmat[self.__index(J, -K, matrixsize_Jmin), self.__index(J, -K, matrixsize_Jmin)] = value
-            Wmat[self.__index(J, 0, matrixsize_Jmin), self.__index(J, 0, matrixsize_Jmin)] = 1.
+                Wmat[self.__index(J,  K), self.__index(J,  K)] = -value
+                Wmat[self.__index(J, -K), self.__index(J,  K)] = value
+                Wmat[self.__index(J,  K), self.__index(J, -K)] = value
+                Wmat[self.__index(J, -K), self.__index(J, -K)] = value
+            Wmat[self.__index(J, 0), self.__index(J, 0)] = 1.
         # transform Hamiltonian matrix
         hmat = num.dot(num.dot(Wmat, hmat), Wmat)
+        # delete Wang matrix (it's not used anymore)
+        del Wmat
         # sort out matrix blocks
         if self.__symmetry == None:
             # nothing to do, return
-            blocks['N'] = self.__hmat
+            blocks['N'] = hmat
         elif self.__symmetry == 'V':
             # full Fourgroup symmetry
             # Only used for field free energies !
             # I^r representation, Wang transformed Hamiltonian factorizes into four submatrices E-, E+, O-, O+
             if Jmin != Jmax:
                 raise NotImplementedError("Hamiltonian consists of more than one J-block. Is this field free ?")
-            J = Jmax 
+            J = Jmax
             if J == 0:
                 # return the single value in the transformed Hamiltonian
                 blocks['Ep'] = num.array(hmat[0,0])
@@ -311,7 +317,7 @@ class AsymmetricRotor:
                 # fill E+
                 for i in range(EplusSize):
                     column = 2*i + J
-                    for m in range(EplusSize)
+                    for m in range(EplusSize):
                         row = 2*m + J
                         Epmat[m,i] = hmat[row,column]
                 # fill O-
@@ -326,11 +332,11 @@ class AsymmetricRotor:
                     for m in range(OplusSize):
                         row = 2*m + J + 1
                         Opmat[m,i] = hmat[row,column]
-                blocks['Em'] = Emmat                
+                blocks['Em'] = Emmat
                 blocks['Ep'] = Epmat
                 blocks['Om'] = Ommat
                 blocks['Op'] = Opmat
-        elif self.__symmetry == 'a':
+        elif self.__symmetry == 'C2a':
             # C2 rotation about a-axis is symmetry element
             #
             # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E- and
@@ -344,7 +350,7 @@ class AsymmetricRotor:
             if (Jmax-Jmin)%2 != 0: #even number of J-blocks
                 ESize = matsize/2
                 OSize = matsize/2
-            elif ((Jmin%2 != 0) && (Jmax%2 !=0)): # odd number of J-blocks, Jmin and Jmax are both odd
+            elif ((Jmin%2 != 0) and  (Jmax%2 !=0)): # odd number of J-blocks, Jmin and Jmax are both odd
                 ESize = (matsize-1)/2
                 OSize = (matsize+1)/2
             else: #odd number of J-blocks, Jmin and Jmax are both even
@@ -352,7 +358,7 @@ class AsymmetricRotor:
                 OSize = (matsize-1)/2
             Even = num.zeros((ESize, ESize), num.float64)
             Odd = num.zeros((OSize, OSize), num.float64)
-            if Jmin%2==0): # start with even J block
+            if 0 == Jmin%2: # start with even J block
                 for i in range(0, matsize, 2):
                     for m in range(0,matsize,2):
                         Even[i/2,m/2] = hmat[i,m]
@@ -368,9 +374,9 @@ class AsymmetricRotor:
                         Even[(i-1)/2, (m-1)/2] = hmat[i,m]
             blocks['E'] = Even
             blocks['O'] = Odd
-        elif self.__symmetry == 'b': # C2 rotation about b-axis is symmetry element
+        elif self.__symmetry == 'C2b': # C2 rotation about b-axis is symmetry element
             raise NotImplementedError("Hamiltonian symmetry 'b' not implemented yet")
-        elif self.__symmetry == 'c': # C2 rotation about c-axis is symmetry element
+        elif self.__symmetry == 'C2c': # C2 rotation about c-axis is symmetry element
             raise NotImplementedError("Hamiltonian symmetry 'c' not implemented yet")
         else:
             # something went wrong
@@ -386,12 +392,12 @@ class AsymmetricRotor:
         for J in range(Jmin, Jmax+1):
             for K in range(-J, J+1):
                 value = -DJ * (J*(J+1))**2 - DJK * J*(J+1)*K**2 - DK * K**4
-                hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
+                hmat[self.__index(J, K), self.__index(J, K)] += value
             for K in range (-J, J-2+1):
                 value = ((-dJ * J*(J+1) - dK/2 * ((K+2)**2 + K**2))
                          * sqrt((J*(J+1) - K*(K+1)) * (J*(J+1) - (K+1)*(K+2))))
-                hmat[self.__index(J, K+2, matrixsize_Jmin), self.__index(J, K, matrixsize_Jmin)] += value
-                hmat[self.__index(J, K, matrixsize_Jmin), self.__index(J, K+2, matrixsize_Jmin)] += value
+                hmat[self.__index(J, K+2), self.__index(J, K)] += value
+                hmat[self.__index(J, K), self.__index(J, K+2)] += value
 
 
     def __watson_S(self):
