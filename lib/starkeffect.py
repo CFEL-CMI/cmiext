@@ -178,7 +178,7 @@ class AsymmetricRotor:
         # fill matrix with appropriate Stark terms for nonzero fields
         if None != field and self.__tiny < abs(field):
             self.__stark(hmat, Jmin, Jmax, field)
-        blocks = self.__wang(hmat, self.__Jmin, self.__Jmax)
+        blocks = self.__wang(hmat, Jmin, Jmax)
         del hmat
         return blocks
 
@@ -255,7 +255,7 @@ class AsymmetricRotor:
 
     def __stateorder(self, symmetry):
         """Return a list with all states for the given |symmetry| and the current calculation parameters (Jmin, Jmax).
-
+        
         Needs to be finished!
         """
         if False == self.__stateorder_valid:
@@ -302,7 +302,7 @@ class AsymmetricRotor:
                     assignment[sym] += zip(eval, label[sym])
             # sort assignments according to energy
             for sym in symmetries:
-                idx = num.argsort(assignments[sym][:, 0])
+                idx = num.argsort(assignment[sym][:, 0])
                 assignment = assignment[sym][idx]
             if 'V' == self.__symmetry:
                 self.__stateorder_dict['Ep'] = assignment['Ep'][:,1]
@@ -310,13 +310,26 @@ class AsymmetricRotor:
                 self.__stateorder_dict['Op'] = assignment['Op'][:,1]
                 self.__stateorder_dict['Om'] = assignment['Om'][:,1]
             elif 'C2a' == self.__symmetry:
-                # merge EplusOrder, EminusOrder and OplusOrder,OminusOrder
-                self.__stateorder_dict['E'] = assignment['Ep'][:,1] + assignment['Em'][:,1]
-                self.__stateorder_dict['O'] = assignment['Op'][:,1] + assignment['Om'][:,1]
+                # merge Eplus, Eminus 
+                merged_assignment = {'Even': [], 'Odd': []}
+                merged_assignment['Even'] = assignment['Ep']+assignment['Em'] # merge 
+                idx = num.argsort(merged_assignment['Even'][:, 0]) # sort merged dictionaries 
+                merged_assignment = merged_assignment['Even'][idx]
+                # merge Oplus, Ominus
+                merged_assignment['Odd'] = assignment['Op']+assignment['Om'] # merge 
+                idx = num.argsort(merged_assignment['Odd'][:, 0]) # sort merged dictionaries 
+                merged_assignment = merged_assignment['Odd'][idx]
+                # return state labels of sorted blocks
+                self.__stateorder_dict['E'] = merged_assignment['Even'][:,1]
+                self.__stateorder_dict['O'] = merged_assignment['Odd'][:,1]
             elif None == self.__symmetry:
                 # merge all four into one....
-                self.__stateorder_dict['N'] = (assignment['Ep'][:,1] + assignment['Em'][:,1]
-                                               + assignment['Op'][:,1] + assignment['Om'][:,1])
+                merged_assignment = {'No': []}
+                merged_assignment['No'] = assignment['Ep']+assignment['Em']+assignment['Op']+assignment['Om'] # merge 
+                idx = num.argsort(merged_assignment['No'][:, 0]) # sort merged dictionaries 
+                merged_assignment = merged_assignment['No'][idx]
+                # return state labels
+                self.__stateorder_dict['N'] = merged_assignment['No'][:,1]
             else:
                 raise NotImplementedError("Hamiltonian symmetry not implemented (yet)")
             self._stateorder_valid = True
