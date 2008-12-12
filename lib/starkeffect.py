@@ -140,7 +140,6 @@ class AsymmetricRotor:
 
     def __recalculate(self):
         """Perform calculation of rotational state energies for current parameters"""
-        print "Recalculating rotational energies"""
         self.__levels = {}
         blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__field, self.__symmetry)
         for symmetry in blocks.keys():
@@ -259,12 +258,10 @@ class AsymmetricRotor:
         Needs to be finished!
         """
         if False == self.__stateorder_valid:
-            print "Recalculating state order"
             self.__stateorder_dict = {}
             M = self.__M
             iso = self.__isomer
-            symmetries= ['Ep', 'Em', 'Op', 'Om']
-            assignment = {'Ep': [], 'Em': [], 'Op': [], 'Om': []}
+            eigenvalues = {'Ep': [], 'Em': [], 'Op': [], 'Om': []}
             label = {'Ep': [], 'Em': [], 'Op': [], 'Om': []}
             for J in range(M, self.__Jmax+1):
                 Ka = 0
@@ -282,10 +279,10 @@ class AsymmetricRotor:
                             else:                         label['Om'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
                 else: # J odd
                     for Kc in range(J,-1,-1):
-                        if Ka%2 ==0 and Kc%2 == 0:    label['Em'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 ==0 and Kc%2 != 0:  label['Ep'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 !=0 and Kc%2 == 0:  label['Om'].append(State(J, Ka, Kc, M, iso))
-                        else:                         label['Op'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                        if Ka%2 ==0 and Kc%2 == 0:   label['Em'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 ==0 and Kc%2 != 0: label['Ep'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 !=0 and Kc%2 == 0: label['Om'].append(State(J, Ka, Kc, M, iso))
+                        else:                        label['Op'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
                         if Kc > 0:
                             Ka = Ka+1
                             if ((Ka%2==0) and  (Kc%2==0)):   label['Em'].append(State(J, Ka, Kc, M, iso))
@@ -297,43 +294,32 @@ class AsymmetricRotor:
                     blocks = {'Ep': num.zeros((1, 1), num.float64)}
                 else:
                     blocks = self.__full_hamiltonian(J, J, None, 'V')
-                # create assignments energies -> labels
+                # store sorted eigenenergies for respective J and block
                 for sym in blocks.keys():
                     if 0 < blocks[sym].size:
-                        eval = num.sort(num.linalg.eigvalsh(num.array(blocks[sym])))
-                        assignment[sym] += zip(eval, label[sym])
+                        eigenvalues[sym] += num.sort(num.linalg.eigvalsh(num.array(blocks[sym]))).tolist()
             # sort assignments according to energy
-            for sym in symmetries:
-                idx = num.argsort(num.array(assignment[sym])[:, 0])
-                assignment = assignment[sym][idx]
             if 'V' == self.__symmetry:
-                self.__stateorder_dict['Ep'] = assignment['Ep'][:,1]
-                self.__stateorder_dict['Em'] = assignment['Em'][:,1]
-                self.__stateorder_dict['Op'] = assignment['Op'][:,1]
-                self.__stateorder_dict['Om'] = assignment['Om'][:,1]
+                symmetries = ['Ep', 'Em', 'Op', 'Om']
             elif 'C2a' == self.__symmetry:
-                # merge Eplus, Eminus
-                merged_assignment = {'Even': [], 'Odd': []}
-                merged_assignment['Even'] = assignment['Ep']+assignment['Em'] # merge
-                idx = num.argsort(merged_assignment['Even'][:, 0]) # sort merged dictionaries
-                merged_assignment = merged_assignment['Even'][idx]
-                # merge Oplus, Ominus
-                merged_assignment['Odd'] = assignment['Op']+assignment['Om'] # merge
-                idx = num.argsort(merged_assignment['Odd'][:, 0]) # sort merged dictionaries
-                merged_assignment = merged_assignment['Odd'][idx]
-                # return state labels of sorted blocks
-                self.__stateorder_dict['E'] = merged_assignment['Even'][:,1]
-                self.__stateorder_dict['O'] = merged_assignment['Odd'][:,1]
+                symmetries = ['E', 'O']
+                eigenvalues['E'] = eigenvalues['Ep'] + eigenvalues['Em']
+                eigenvalues['O'] = eigenvalues['Op'] + eigenvalues['Om']
+                label['E'] = label['Ep'] + label['Em']
+                label['O'] = label['Op'] + label['Om']
+            elif 'C2b' == self.__symmetry:
+                raise NotImplementedError
+            elif 'C2c' == self.__symmetry:
+                raise NotImplementedError
             elif 'N' == self.__symmetry:
-                # merge all four into one....
-                merged_assignment = {'N': []}
-                merged_assignment['N'] = assignment['Ep']+assignment['Em']+assignment['Op']+assignment['Om'] # merge
-                idx = num.argsort(merged_assignment['N'][:, 0]) # sort merged dictionaries
-                merged_assignment = merged_assignment['N'][idx]
-                # return state labels
-                self.__stateorder_dict['N'] = merged_assignment['N'][:,1]
+                symmetries = ['N']
+                eigenvalues['N'] = eigenvalues['Ep'] + eigenvalues['Em'] + eigenvalues['Op'] + eigenvalues['Om']
+                label['N'] = label['Ep'] + label['Em'] + label['Op'] + label['Om']
             else:
                 raise NotImplementedError("Hamiltonian symmetry not implemented (yet)")
+            for sym in symmetries:
+                idx = num.argsort(eigenvalues[sym])
+                self.__stateorder_dict[sym] = num.array(label[sym])[idx]
             self.__stateorder_valid = True
         return self.__stateorder_dict[symmetry]
 
@@ -371,43 +357,40 @@ class AsymmetricRotor:
                 # return the single value in the transformed Hamiltonian
                 blocks['Ep'] = num.array(hmat[0,0])
             else:
-                EminusSize = J//2
-                EplusSize = EminusSize + 1
-                OminusSize = EminusSize + J%2
-                OplusSize = OminusSize
-                Emmat = num.zeros((EminusSize, EminusSize), num.float64)
-                Epmat = num.zeros((EplusSize, EplusSize), num.float64)
-                Ommat = num.zeros((OminusSize, OminusSize), num.float64)
-                Opmat = num.zeros((OplusSize, OplusSize), num.float64)
+                blocksize = {}
+                blocksize['Em'] = J//2
+                blocksize['Ep'] = blocksize['Em'] + 1
+                blocksize['Om'] = blocksize['Em'] + J%2
+                blocksize['Op'] = blocksize['Om']
+                blocks['Ep'] = num.zeros((blocksize['Ep'], blocksize['Ep']), num.float64)
+                blocks['Em'] = num.zeros((blocksize['Em'], blocksize['Em']), num.float64)
+                blocks['Op'] = num.zeros((blocksize['Op'], blocksize['Op']), num.float64)
+                blocks['Om'] = num.zeros((blocksize['Om'], blocksize['Om']), num.float64)
                 #fill E-
-                if EminusSize > 0: # for J == 1 E- does not exist
-                    for i in range(EminusSize):
+                if blocksize['Em'] > 0: # for J == 1, E- does not exist
+                    for i in range(blocksize['Em']):
                         column = 2*i + J%2
-                        for m in range(EminusSize):
+                        for m in range(blocksize['Em']):
                             row = 2*m + J%2
-                            Emmat[m,i] = hmat[row,column]
+                            blocks['Em'][m, i] = hmat[row, column]
                 # fill E+
-                for i in range(EplusSize):
+                for i in range(blocksize['Ep']):
                     column = 2*i + J
-                    for m in range(EplusSize):
+                    for m in range(blocksize['Ep']):
                         row = 2*m + J
-                        Epmat[m,i] = hmat[row,column]
+                        blocks['Ep'][m, i] = hmat[row, column]
                 # fill O-
-                for i in range(OminusSize):
+                for i in range(blocksize['Om']):
                     column = 2*i - J%2 + 1
-                    for m in range(OminusSize):
+                    for m in range(blocksize['Om']):
                         row = 2*m - J%2 + 1
-                        Ommat[m,i] = hmat[row,column]
+                        blocks['Om'][m, i] = hmat[row, column]
                 # fill O+
-                for i in range(OplusSize):
+                for i in range(blocksize['Op']):
                     column = 2*i + J + 1
-                    for m in range(OplusSize):
+                    for m in range(blocksize['Op']):
                         row = 2*m + J + 1
-                        Opmat[m,i] = hmat[row,column]
-                blocks['Em'] = Emmat
-                blocks['Ep'] = Epmat
-                blocks['Om'] = Ommat
-                blocks['Op'] = Opmat
+                        blocks['Op'][m, i] = hmat[row, column]
         elif symmetry == 'C2a':
             # C2 rotation about a-axis is symmetry element
             #
@@ -483,11 +466,17 @@ if __name__ == "__main__":
     print
     p = CalculationParameter
     p.Jmax_calc = 2
-    p.rotcon = num.array([5e9, 2e9, 1.5e9])
-    p.quartic = num.array([1e3, 1e3, 1e3, 1e3, 1e3])
+    p.rotcon = jkext.convert.Hz2J(num.array([5e9, 2e9, 1.5e9]))
+    p.quartic = jkext.convert.Hz2J([1e3, 1e3, 1e3, 1e3, 1e3])
     p.watson = 'A'
+    p.dipole = jkext.convert.D2Cm([1., 1., 1.])
     top = AsymmetricRotor(p, 0, 0)
     for state in [State(0, 0, 0, 0, 0),
                   State(1, 0, 1, 0, 0), State(1, 1, 1, 0, 0), State(1, 1, 0, 0, 0),
                   State(2, 1, 2, 0, 0)]:
-        print state.name(), "%10.3f" % (top.energy(state) / 1e6,)
+        print state.name(), "%10.3f" % (jkext.convert.J2Hz(top.energy(state)) / 1e6,)
+    top = AsymmetricRotor(p, 0, jkext.convert.kV_cm2V_m(100.))
+    for state in [State(0, 0, 0, 0, 0),
+                  State(1, 0, 1, 0, 0), State(1, 1, 1, 0, 0), State(1, 1, 0, 0, 0),
+                  State(2, 1, 2, 0, 0)]:
+        print state.name(), "%10.3f" % (jkext.convert.J2Hz(top.energy(state)) / 1e6,)
