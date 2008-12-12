@@ -56,7 +56,6 @@ class CalculationParameter:
     type = 'A'
     fields = jkext.convert.kV_cm2V_m(num.linspace(0., 100., 2)) # V/m
     M = range(0, 2)
-    Jmin = 0
     Jmax_calc = 5
     Jmax_save = 2
     isomer = 0
@@ -92,7 +91,7 @@ class AsymmetricRotor:
         # save quantum numbers
         self.__M = int(M) # use the single spefied M
         self.__isomer = int(param.isomer)
-        self.__Jmin = int(max(self.__M, param.Jmin))
+        self.__Jmin = self.__M # this must be equal to self.__M (in Stark calculation all J couple)
         self.__Jmax = int(param.Jmax_calc)
         self.__Jmax_save = int(param.Jmax_save)
         # more checks
@@ -143,7 +142,7 @@ class AsymmetricRotor:
         """Perform calculation of rotational state energies for current parameters"""
         print "Recalculating rotational energies"""
         self.__levels = {}
-        blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax)
+        blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__field)
         for symmetry in blocks.keys():
             eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate only energies
             eval = num.sort(eval)
@@ -156,7 +155,7 @@ class AsymmetricRotor:
         self.__valid = True
 
 
-    def __full_hamiltonian(self, Jmin, Jmax):
+    def __full_hamiltonian(self, Jmin, Jmax, field):
         """Return block-diagonalized Hamiltonian matrix (blocks)"""
         self.__Jmin_matrixsize = Jmin *(Jmin-1) + Jmin
         matrixsize = (Jmax + 1) * Jmax + Jmax + 1 - self.__Jmin_matrixsize
@@ -177,8 +176,8 @@ class AsymmetricRotor:
         else:
             assert self.__watson == None
         # fill matrix with appropriate Stark terms for nonzero fields
-        if self.__tiny < abs(self.__field):
-            self.__stark(hmat, Jmin, Jmax)
+        if None != field and self.__tiny < abs(field):
+            self.__stark(hmat, Jmin, Jmax, field)
         blocks = self.__wang(hmat, self.__Jmin, self.__Jmax)
         del hmat
         return blocks
@@ -197,10 +196,9 @@ class AsymmetricRotor:
                 hmat[self.__index(J, K), self.__index(J, K+2)] += value
 
 
-    def __stark(self, hmat, Jmin, Jmax):
+    def __stark(self, hmat, Jmin, Jmax, field):
         """Add the Stark-effect matrix element terms to hmat"""
         sqrt = num.sqrt
-        field = self.__field
         M = self.__M
         muA, muB, muC = self.__dipole
         if self.__dipole_components[0]:
@@ -267,7 +265,7 @@ class AsymmetricRotor:
             symmetries= ['Ep', 'Em', 'Op', 'Om']
             assignment = {'Ep': [], 'Em': [], 'Op': [], 'Om': []}
             label = {'Ep': [], 'Em': [], 'Op': [], 'Om': []}
-            for J in range(self.__M, self.__Jmax+1):
+            for J in range(M, self.__Jmax+1):
                 Ka = 0
                 if 0 == J%2: # J even
                     for Kc in range(J,-1,-1):
@@ -297,7 +295,7 @@ class AsymmetricRotor:
                 if 0 == J:
                     blocks = {'Ep': num.zeros((1, 1), num.float64)}
                 else:
-                    blocks = self.__full_hamiltonian(J, J)
+                    blocks = self.__full_hamiltonian(J, J, None)
                 # create assignments energies -> labels
                 for sym in blocks.keys():
                     eval = num.sort(num.linalg.eigvalsh(blocks[sym]))
