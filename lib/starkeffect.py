@@ -19,10 +19,10 @@ from __future__ import division
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
-# really use scipy s numpy, so we are sure we use Fortran codes of eigvalsh and dgemm
+# really use scipy as numpy, so we are sure we use Fortran codes of eigvalsh and dgemm
 import scipy as num
-import scipy.linalg
 import scipy.linalg.fblas
+
 import jkext.convert
 from jkext.state import State
 
@@ -465,12 +465,14 @@ class AsymmetricRotor:
 if __name__ == "__main__":
     print
     p = CalculationParameter
-    p.Jmax_calc = 2
+    p.Jmax_calc = 10
+    p.Jmax_save =  2
+    p.M = [0, 1]
     p.rotcon = jkext.convert.Hz2J(num.array([5e9, 2e9, 1.5e9]))
     p.quartic = jkext.convert.Hz2J([1e3, 1e3, 1e3, 1e3, 1e3])
     p.watson = 'A'
     p.dipole = jkext.convert.D2Cm([1., 1., 1.])
-    top = AsymmetricRotor(p, 0, 0)
+    top = AsymmetricRotor(p, 0, 0.)
     for state in [State(0, 0, 0, 0, 0),
                   State(1, 0, 1, 0, 0), State(1, 1, 1, 0, 0), State(1, 1, 0, 0, 0),
                   State(2, 1, 2, 0, 0)]:
