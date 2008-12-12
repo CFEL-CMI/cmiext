@@ -64,7 +64,7 @@ class CalculationParameter:
     quartic = num.zeros((5,), num.float64)   # Joule
     dipole = num.zeros((3,), num.float64)    # Coulomb meter
     watson=None
-    symmetry=None
+    symmetry='N'
 
 
 
@@ -142,7 +142,7 @@ class AsymmetricRotor:
         """Perform calculation of rotational state energies for current parameters"""
         print "Recalculating rotational energies"""
         self.__levels = {}
-        blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__field)
+        blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__field, self.__symmetry)
         for symmetry in blocks.keys():
             eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate only energies
             eval = num.sort(eval)
@@ -155,7 +155,7 @@ class AsymmetricRotor:
         self.__valid = True
 
 
-    def __full_hamiltonian(self, Jmin, Jmax, field):
+    def __full_hamiltonian(self, Jmin, Jmax, field, symmetry):
         """Return block-diagonalized Hamiltonian matrix (blocks)"""
         self.__Jmin_matrixsize = Jmin *(Jmin-1) + Jmin
         matrixsize = (Jmax + 1) * Jmax + Jmax + 1 - self.__Jmin_matrixsize
@@ -178,7 +178,7 @@ class AsymmetricRotor:
         # fill matrix with appropriate Stark terms for nonzero fields
         if None != field and self.__tiny < abs(field):
             self.__stark(hmat, Jmin, Jmax, field)
-        blocks = self.__wang(hmat, Jmin, Jmax)
+        blocks = self.__wang(hmat, symmetry, Jmin, Jmax)
         del hmat
         return blocks
 
@@ -255,7 +255,7 @@ class AsymmetricRotor:
 
     def __stateorder(self, symmetry):
         """Return a list with all states for the given |symmetry| and the current calculation parameters (Jmin, Jmax).
-        
+
         Needs to be finished!
         """
         if False == self.__stateorder_valid:
@@ -295,14 +295,16 @@ class AsymmetricRotor:
                 if 0 == J:
                     blocks = {'Ep': num.zeros((1, 1), num.float64)}
                 else:
-                    blocks = self.__full_hamiltonian(J, J, None)
+                    blocks = self.__full_hamiltonian(J, J, None, 'V')
                 # create assignments energies -> labels
+                print blocks.keys()
                 for sym in blocks.keys():
-                    eval = num.sort(num.linalg.eigvalsh(blocks[sym]))
-                    assignment[sym] += zip(eval, label[sym])
+                    if 0 < blocks[sym].size:
+                        eval = num.sort(num.linalg.eigvalsh(num.array(blocks[sym])))
+                        assignment[sym] += zip(eval, label[sym])
             # sort assignments according to energy
             for sym in symmetries:
-                idx = num.argsort(assignment[sym][:, 0])
+                idx = num.argsort(num.array(assignment[sym])[:, 0])
                 assignment = assignment[sym][idx]
             if 'V' == self.__symmetry:
                 self.__stateorder_dict['Ep'] = assignment['Ep'][:,1]
@@ -310,33 +312,33 @@ class AsymmetricRotor:
                 self.__stateorder_dict['Op'] = assignment['Op'][:,1]
                 self.__stateorder_dict['Om'] = assignment['Om'][:,1]
             elif 'C2a' == self.__symmetry:
-                # merge Eplus, Eminus 
+                # merge Eplus, Eminus
                 merged_assignment = {'Even': [], 'Odd': []}
-                merged_assignment['Even'] = assignment['Ep']+assignment['Em'] # merge 
-                idx = num.argsort(merged_assignment['Even'][:, 0]) # sort merged dictionaries 
+                merged_assignment['Even'] = assignment['Ep']+assignment['Em'] # merge
+                idx = num.argsort(merged_assignment['Even'][:, 0]) # sort merged dictionaries
                 merged_assignment = merged_assignment['Even'][idx]
                 # merge Oplus, Ominus
-                merged_assignment['Odd'] = assignment['Op']+assignment['Om'] # merge 
-                idx = num.argsort(merged_assignment['Odd'][:, 0]) # sort merged dictionaries 
+                merged_assignment['Odd'] = assignment['Op']+assignment['Om'] # merge
+                idx = num.argsort(merged_assignment['Odd'][:, 0]) # sort merged dictionaries
                 merged_assignment = merged_assignment['Odd'][idx]
                 # return state labels of sorted blocks
                 self.__stateorder_dict['E'] = merged_assignment['Even'][:,1]
                 self.__stateorder_dict['O'] = merged_assignment['Odd'][:,1]
-            elif None == self.__symmetry:
+            elif 'N' == self.__symmetry:
                 # merge all four into one....
-                merged_assignment = {'No': []}
-                merged_assignment['No'] = assignment['Ep']+assignment['Em']+assignment['Op']+assignment['Om'] # merge 
-                idx = num.argsort(merged_assignment['No'][:, 0]) # sort merged dictionaries 
-                merged_assignment = merged_assignment['No'][idx]
+                merged_assignment = {'N': []}
+                merged_assignment['N'] = assignment['Ep']+assignment['Em']+assignment['Op']+assignment['Om'] # merge
+                idx = num.argsort(merged_assignment['N'][:, 0]) # sort merged dictionaries
+                merged_assignment = merged_assignment['N'][idx]
                 # return state labels
-                self.__stateorder_dict['N'] = merged_assignment['No'][:,1]
+                self.__stateorder_dict['N'] = merged_assignment['N'][:,1]
             else:
                 raise NotImplementedError("Hamiltonian symmetry not implemented (yet)")
             self._stateorder_valid = True
         return self.__stateorder_dict[symmetry]
 
 
-    def __wang(self, hmat, Jmin, Jmax):
+    def __wang(self, hmat, symmetry, Jmin, Jmax):
         """Wang transform matrix and return a dictionary with the individual (sub)matrices."""
         blocks = {}
         # set up Wang matrix
@@ -355,10 +357,10 @@ class AsymmetricRotor:
         # delete Wang matrix (it's not used anymore)
         del Wmat
         # sort out matrix blocks
-        if self.__symmetry == None:
+        if 'N' == symmetry:
             # nothing to do, return
             blocks['N'] = hmat
-        elif self.__symmetry == 'V':
+        elif symmetry == 'V':
             # full Fourgroup symmetry
             # Only used for field free energies !
             # I^r representation, Wang transformed Hamiltonian factorizes into four submatrices E-, E+, O-, O+
@@ -406,7 +408,7 @@ class AsymmetricRotor:
                 blocks['Ep'] = Epmat
                 blocks['Om'] = Ommat
                 blocks['Op'] = Opmat
-        elif self.__symmetry == 'C2a':
+        elif symmetry == 'C2a':
             # C2 rotation about a-axis is symmetry element
             #
             # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E- and
@@ -444,13 +446,13 @@ class AsymmetricRotor:
                         Even[(i-1)/2, (m-1)/2] = hmat[i,m]
             blocks['E'] = Even
             blocks['O'] = Odd
-        elif self.__symmetry == 'C2b': # C2 rotation about b-axis is symmetry element
+        elif symmetry == 'C2b': # C2 rotation about b-axis is symmetry element
             raise NotImplementedError("Hamiltonian symmetry 'b' not implemented yet")
-        elif self.__symmetry == 'C2c': # C2 rotation about c-axis is symmetry element
+        elif symmetry == 'C2c': # C2 rotation about c-axis is symmetry element
             raise NotImplementedError("Hamiltonian symmetry 'c' not implemented yet")
         else:
             # something went wrong
-            raise "unknown Hamiltonian symmetry"
+            raise SyntaxError("unknown Hamiltonian symmetry")
         return blocks
 
 
