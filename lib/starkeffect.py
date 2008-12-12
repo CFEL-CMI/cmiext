@@ -259,6 +259,7 @@ class AsymmetricRotor:
         Needs to be finished!
         """
         if False == self.__stateorder_valid:
+            print "Recalculating state order"
             self.__stateorder_dict = {}
             M = self.__M
             iso = self.__isomer
@@ -297,7 +298,6 @@ class AsymmetricRotor:
                 else:
                     blocks = self.__full_hamiltonian(J, J, None, 'V')
                 # create assignments energies -> labels
-                print blocks.keys()
                 for sym in blocks.keys():
                     if 0 < blocks[sym].size:
                         eval = num.sort(num.linalg.eigvalsh(num.array(blocks[sym])))
@@ -334,7 +334,7 @@ class AsymmetricRotor:
                 self.__stateorder_dict['N'] = merged_assignment['N'][:,1]
             else:
                 raise NotImplementedError("Hamiltonian symmetry not implemented (yet)")
-            self._stateorder_valid = True
+            self.__stateorder_valid = True
         return self.__stateorder_dict[symmetry]
 
 
@@ -344,7 +344,7 @@ class AsymmetricRotor:
         # set up Wang matrix
         Wmat = num.zeros(hmat.shape, num.float64)
         value = 1/num.sqrt(2.)
-        for J in range(Jmin, Jmax, 1):
+        for J in range(Jmin, Jmax+1):
             for K in range(-J, 0):
                 Wmat[self.__index(J,  K), self.__index(J,  K)] = -value
                 Wmat[self.__index(J, -K), self.__index(J,  K)] = value
@@ -371,7 +371,7 @@ class AsymmetricRotor:
                 # return the single value in the transformed Hamiltonian
                 blocks['Ep'] = num.array(hmat[0,0])
             else:
-                EminusSize = J/2
+                EminusSize = J//2
                 EplusSize = EminusSize + 1
                 OminusSize = EminusSize + J%2
                 OplusSize = OminusSize
@@ -482,6 +482,7 @@ class AsymmetricRotor:
 if __name__ == "__main__":
     print
     p = CalculationParameter
+    p.Jmax_calc = 2
     p.rotcon = num.array([5e9, 2e9, 1.5e9])
     p.quartic = num.array([1e3, 1e3, 1e3, 1e3, 1e3])
     p.watson = 'A'
