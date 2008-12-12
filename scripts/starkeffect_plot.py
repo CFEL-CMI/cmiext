@@ -43,7 +43,7 @@ storagename = "molecule.hdf"
 mol = molecule.Molecule(storage=storagename)
 
 plt.clf()
-for J in range(0, 4):
+for J in range(0, 3):
     Ka = 0
     for Kc in range(J, -1, -1):
         state = State(J, Ka, Kc, 0, 0)
