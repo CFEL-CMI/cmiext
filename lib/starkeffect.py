@@ -394,45 +394,51 @@ class AsymmetricRotor:
         elif symmetry == 'C2a':
             # C2 rotation about a-axis is symmetry element
             #
-            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E- and
-            # E+) and O (contains O- and O+). In this case E and O corresponds to columns with Ka even and odd,
-            # respectively.
+            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E- and E+)
+            # and O (contains O- and O+).
+            # In this case E and O corresponds to columns with Ka even and odd, respectively.
             matrixsize_Jmin = Jmin *(Jmin-1) + Jmin
-            matrixsize = (Jmax + 1) * Jmax + Jmax + 1 - matrixsize_Jmin
-            matsize = matrixsize
-            ESize = 0
-            OSize = 0
-            if (Jmax-Jmin)%2 != 0: #even number of J-blocks
-                ESize = matsize/2
-                OSize = matsize/2
-            elif ((Jmin%2 != 0) and  (Jmax%2 !=0)): # odd number of J-blocks, Jmin and Jmax are both odd
-                ESize = (matsize-1)/2
-                OSize = (matsize+1)/2
+            matrixsize_full = (Jmax + 1) * Jmax + Jmax + 1 - matrixsize_Jmin
+            matrixsize = {}
+            if (Jmax-Jmin)%2 != 0: # even number of J-blocks
+                matrixsize['E'] = matrixsize_full//2
+                matrixsize['O'] = matrixsize_full//2
+            elif Jmin%2 != 0 and Jmax%2 !=0: # odd number of J-blocks, Jmin and Jmax are both odd
+                matrixsize['E'] = (matrixsize_full-1)//2
+                matrixsize['O'] = (matrixsize_full+1)//2
             else: #odd number of J-blocks, Jmin and Jmax are both even
-                ESize = (matsize+1)/2
-                OSize = (matsize-1)/2
-            Even = num.zeros((ESize, ESize), num.float64)
-            Odd = num.zeros((OSize, OSize), num.float64)
+                matrixsize['E'] = (matrixsize_full+1)//2
+                matrixsize['O'] = (matrixsize_full-1)//2
+            for sym in ['E', 'O']:
+                blocks[sym] = num.zeros((matrixsize[sym], matrixsize[sym]), num.float64)
             if 0 == Jmin%2: # start with even J block
-                for i in range(0, matsize, 2):
-                    for m in range(0,matsize,2):
-                        Even[i/2,m/2] = hmat[i,m]
-                for i in range(1, matsize, 2):
-                    for m in range(1, matsize, 2):
-                        Odd[(i-1)/2, (m-1)/2] = hmat[i,m]
+                for i in range(0, matrixsize_full, 2):
+                    for m in range(0,matrixsize_full,2):
+                        blocks['E'][i//2, m//2] = hmat[i, m]
+                for i in range(1, matrixsize_full, 2):
+                    for m in range(1, matrixsize_full, 2):
+                        blocks['O'][(i-1)//2, (m-1)//2] = hmat[i, m]
             else: # start with odd J block
-                for i in range(0, matsize, 2):
-                    for m in range(0,matsize,2):
-                        Odd[i/2,m/2] = hmat[i,m]
-                for i in range(1, matsize, 2):
-                    for m in range(1, matsize, 2):
-                        Even[(i-1)/2, (m-1)/2] = hmat[i,m]
-            blocks['E'] = Even
-            blocks['O'] = Odd
+                for i in range(0, matrixsize_full, 2):
+                    for m in range(0,matrixsize_full,2):
+                        blocks['O'][i//2, m//2] = hmat[i, m]
+                for i in range(1, matrixsize_full, 2):
+                    for m in range(1, matrixsize_full, 2):
+                        blocks['E'][(i-1)//2, (m-1)//2] = hmat[i, m]
         elif symmetry == 'C2b': # C2 rotation about b-axis is symmetry element
-            raise NotImplementedError("Hamiltonian symmetry 'b' not implemented yet")
-        elif symmetry == 'C2c': # C2 rotation about c-axis is symmetry element
-            raise NotImplementedError("Hamiltonian symmetry 'c' not implemented yet")
+            raise NotImplementedError("Hamiltonian symmetry 'C2b' not implemented yet")
+            # C2 rotation about b-axis is symmetry element
+            #
+            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices ? (contains ee and oo)
+            # and ? (contains eo and oe).
+            # In this case E and O corresponds to columns with Ka even and odd, respectively.
+        elif symmetry == 'C2c':
+            # C2 rotation about c-axis is symmetry element
+            #
+            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices ? (contains ee and oe)
+            # and ? (contains eo and oo).
+            # In this case ? and ? corresponds to columns with Kc even and odd, respectively.
+            raise NotImplementedError("Hamiltonian symmetry 'C2c' not implemented yet")
         else:
             # something went wrong
             raise SyntaxError("unknown Hamiltonian symmetry")
