@@ -222,25 +222,21 @@ class Molecule:
 # some simple tests
 if __name__ == "__main__":
     print
-    # test State
-    state = State(0, 0, 0, 0)
-    state.fromid(1000001)
-    print state.name()
     # test Stark calculation and storage/retrieval
     from convert import *
     param = jkext.starkeffect.CalculationParameter
     param.isomer = 0
     param.watson = 'A'
-    param.symmetry = None # 'a'
+    param.symmetry = 'C2a'
     param.rotcon = Hz2J(num.array([5000e6, 1500e6, 1200e6]))
     param.quartic = Hz2J(num.array([50., 1000., 500, 10., 600]))
     param.dipole = D2Cm(num.array([5, 0., 0.]))
     # calculation details
     param.M = [0]
     param.Jmin = 0
-    param.Jmax_calc = 10
+    param.Jmax_calc = 20
     param.Jmax_save = 5
-    param.fields = kV_cm2V_m(num.array([0., 10., 50., 100.]))
+    param.fields = kV_cm2V_m(num.linspace(0., 100., 101))
     # save and print
     mol = Molecule(storage="molecule.hdf")
     mol.starkeffect_calculation(param)
