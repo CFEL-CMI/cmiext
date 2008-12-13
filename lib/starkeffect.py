@@ -347,8 +347,7 @@ class AsymmetricRotor:
             # nothing to do, return
             blocks['N'] = hmat
         elif symmetry == 'V':
-            # full Fourgroup symmetry
-            # Only used for field free energies !
+            # full Fourgroup symmetry (only field free Hamiltonian)
             # I^r representation, Wang transformed Hamiltonian factorizes into four submatrices E-, E+, O-, O+
             if Jmin != Jmax:
                 raise NotImplementedError("Hamiltonian consists of more than one J-block. Is this field free ?")
@@ -357,74 +356,24 @@ class AsymmetricRotor:
                 # return the single value in the transformed Hamiltonian
                 blocks['Ep'] = num.array(hmat[0,0])
             else:
-                blocksize = {}
-                blocksize['Em'] = J//2
-                blocksize['Ep'] = blocksize['Em'] + 1
-                blocksize['Om'] = blocksize['Em'] + J%2
-                blocksize['Op'] = blocksize['Om']
-                blocks['Ep'] = num.zeros((blocksize['Ep'], blocksize['Ep']), num.float64)
-                blocks['Em'] = num.zeros((blocksize['Em'], blocksize['Em']), num.float64)
-                blocks['Op'] = num.zeros((blocksize['Op'], blocksize['Op']), num.float64)
-                blocks['Om'] = num.zeros((blocksize['Om'], blocksize['Om']), num.float64)
-                #fill E-
-                if blocksize['Em'] > 0: # for J == 1, E- does not exist
-                    for i in range(blocksize['Em']):
-                        column = 2*i + J%2
-                        for m in range(blocksize['Em']):
-                            row = 2*m + J%2
-                            blocks['Em'][m, i] = hmat[row, column]
-                # fill E+
-                for i in range(blocksize['Ep']):
-                    column = 2*i + J
-                    for m in range(blocksize['Ep']):
-                        row = 2*m + J
-                        blocks['Ep'][m, i] = hmat[row, column]
-                # fill O-
-                for i in range(blocksize['Om']):
-                    column = 2*i - J%2 + 1
-                    for m in range(blocksize['Om']):
-                        row = 2*m - J%2 + 1
-                        blocks['Om'][m, i] = hmat[row, column]
-                # fill O+
-                for i in range(blocksize['Op']):
-                    column = 2*i + J + 1
-                    for m in range(blocksize['Op']):
-                        row = 2*m + J + 1
-                        blocks['Op'][m, i] = hmat[row, column]
+                blocks['Ep'] = hmat[J:2*(J//2+1)+J:2, J:2*(J//2+1)+J:2]
+                blocks['Em'] = hmat[J%2:2*(J//2)+J%2:2, J%2:2*(J//2)+J%2:2]
+                blocks['Op'] = hmat[J+1:2*(J//2+J%2)+J+1:2, J+1:2*(J//2+J%2)+J+1:2]
+                blocks['Om'] = hmat[1-J%2:2*(J//2+J%2)+1-J%2:2, 1-J%2:2*(J//2+J%2)+1-J%2:2]
         elif symmetry == 'C2a':
             # C2 rotation about a-axis is symmetry element
             #
-            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E- and E+)
-            # and O (contains O- and O+).
+            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E+ and E-)
+            # and O (contains O+ and O-).
             # In this case E and O corresponds to columns with Ka even and odd, respectively.
             matrixsize_Jmin = Jmin *(Jmin-1) + Jmin
             matrixsize_full = (Jmax + 1) * Jmax + Jmax + 1 - matrixsize_Jmin
-            matrixsize = {}
-            if (Jmax-Jmin)%2 != 0: # even number of J-blocks
-                matrixsize['E'] = matrixsize_full//2
-                matrixsize['O'] = matrixsize_full//2
-            elif Jmin%2 != 0 and Jmax%2 !=0: # odd number of J-blocks, Jmin and Jmax are both odd
-                matrixsize['E'] = (matrixsize_full-1)//2
-                matrixsize['O'] = (matrixsize_full+1)//2
-            else: #odd number of J-blocks, Jmin and Jmax are both even
-                matrixsize['E'] = (matrixsize_full+1)//2
-                matrixsize['O'] = (matrixsize_full-1)//2
-            for sym in ['E', 'O']:
-                blocks[sym] = num.zeros((matrixsize[sym], matrixsize[sym]), num.float64)
             if 0 == Jmin%2: # start with even J block
-                for i in range(0, matrixsize_full, 2):
-                    for m in range(0,matrixsize_full,2):
-                        blocks['E'][i//2, m//2] = hmat[i, m]
-                for i in range(1, matrixsize_full, 2):
-                    for m in range(1, matrixsize_full, 2):
-                        blocks['O'][(i-1)//2, (m-1)//2] = hmat[i, m]
+                blocks['E'] = hmat[0:matrixsize_full:2, 0:matrixsize_full:2]
+                blocks['O'] = hmat[1:matrixsize_full:2, 1:matrixsize_full:2]
             else: # start with odd J block
-                for i in range(0, matrixsize_full, 2):
-                    for m in range(0,matrixsize_full,2):
-                        blocks['O'][i//2, m//2] = hmat[i, m]
-                for i in range(1, matrixsize_full, 2):
-                    for m in range(1, matrixsize_full, 2):
-                        blocks['E'][(i-1)//2, (m-1)//2] = hmat[i, m]
+                blocks['E'] = hmat[1:matrixsize_full:2, 1:matrixsize_full:2]
+                blocks['O'] = hmat[0:matrixsize_full:2, 0:matrixsize_full:2]
         elif symmetry == 'C2b': # C2 rotation about b-axis is symmetry element
             raise NotImplementedError("Hamiltonian symmetry 'C2b' not implemented yet")
             # C2 rotation about b-axis is symmetry element
