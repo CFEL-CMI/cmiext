@@ -234,8 +234,8 @@ if __name__ == "__main__":
     # calculation details
     param.M = [0]
     param.Jmin = 0
-    param.Jmax_calc = 20
-    param.Jmax_save = 5
+    param.Jmax_calc = 10
+    param.Jmax_save =  5
     param.fields = kV_cm2V_m(num.linspace(0., 100., 101))
     # save and print
     mol = Molecule(storage="molecule.hdf")

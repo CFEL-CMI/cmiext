@@ -43,6 +43,10 @@ def J2Hz(val):
     """Joule -> Hertz"""
     return numpy.array(val) / const.plancks_constant_h
 
+def J2MHz(val):
+    """Joule -> Hertz"""
+    return J2Hz(val) / 1e6
+
 
 def V_m2kV_cm(val):
     """V/m -> kV/cm"""
