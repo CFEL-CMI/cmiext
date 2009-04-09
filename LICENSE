@@ -1,7 +1,12 @@
-JK Python extensions are provided as is. The are licensed under the
-GPL v3 with the additional requirement, that its use for scientific
-work must be acknowledged by the appropriate reference in any
-resulting work (i.e., scientific publication).
+JK Python extensions are provided as is. They are licensed under the
+GPL v3 with the additional requirements, that
 
-The correct reference is:
-    Jochen Küpper, JK Python extensions, http://python.jochen-kuepper.de (2008)
+a) its use for scientific work must be acknowledged by the appropriate
+   reference in any resulting work (i.e., scientific publication). The
+   correct reference is:
+       Jochen Küpper et al, JK Python extensions,
+       URL: http://python.jochen-kuepper.de (2009)
+   See AUTHORS for a full list of contributors.
+
+b) any corrections and enhancements must be contributed back to the
+   development of the package.
