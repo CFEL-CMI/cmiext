@@ -77,12 +77,14 @@ def main(args):
             for Kc in range(J, -1, -1):
                 state = State(J, Ka, Kc, 0, 0)
                 fields, energies = mol.starkeffect(state)
-                print state.name(), V_m2kV_cm(fields), J2Hz(energies) / 1e6
+                fields, mueff = mol.mueff(state)
+                print state.name(), V_m2kV_cm(fields), J2Hz(energies) / 1e6, J2Hz(mueff / V_m2kV_cm(1)) / 1e6
                 if Kc > 0:
                     Ka += 1
                     state = State(J, Ka, Kc, 0, 0)
                     fields, energies = mol.starkeffect(state)
-                    print state.name(), V_m2kV_cm(fields), J2Hz(energies) / 1e6
+                    fields, mueff = mol.mueff(state)
+                    print state.name(), V_m2kV_cm(fields), J2Hz(energies) / 1e6, J2Hz(mueff / V_m2kV_cm(1)) / 1e6
 
 
 if __name__ == "__main__":
