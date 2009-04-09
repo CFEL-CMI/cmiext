@@ -68,7 +68,6 @@ def main(args):
 
     # loop over all remaining arguments -- asumming its filenames of HDF5 Stark-files
     for name in args:
-        print name
         # create Molecule object and specify storage file
         mol = molecule.Molecule(storage=name)
 
