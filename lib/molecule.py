@@ -148,6 +148,20 @@ class Molecule:
         return rotcon
 
 
+    def mueff(self, state):
+        """Get the effective dipole moment \mu_eff as a function of the electric field strength.
+
+        Return the effective dipole moment curve for the specified quantum |state|.
+        """
+        fields, energies = self.starkeffect(state)
+        assert len(fields) == len(energies)
+        mueff = num.zeros((len(fields),), num.float64)
+        mueff[1:-1] = -1 * (energies[0:-2] - energies[2:]) / (fields[0:-2] - fields[2:])
+        mueff[0] = 0.
+        mueff[-1] = mueff[-2]
+        return fields, mueff
+
+
     def starkeffect(self, state, fields=None, energies=None):
         """Get or set the potential energies as a function of the electric field strength.
 
