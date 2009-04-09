@@ -31,6 +31,7 @@ try:
     from pygsl.const import *
 except ImportError:
     angstrom = 1e-10
+    boltzmann = 1.3806504000000001e-23
     pi = 3.1415926535897931
     plancks_constant_h = 6.6260689599999996e-34
     speed_of_light = 299792458.
