@@ -172,8 +172,8 @@ class Molecule:
         if 'A' == param.type:
             for M in param.M:
                 energies = {}
-                for field in param.fields:
-                    calc = jkext.starkeffect.AsymmetricRotor(param, M, field)
+                for field in param.dcfields:
+                    calc = jkext.starkeffect.AsymmetricRotor(param, M, 0., field)
                     for state in calc.states():
                         id = state.id()
                         if energies.has_key(id):
@@ -182,9 +182,9 @@ class Molecule:
                             energies[id] = [calc.energy(state),]
                 # store calculated values for this M
                 for id in energies.keys():
-                    self.starkeffect_merge(State().fromid(id), param.fields, energies[id])
+                    self.starkeffect_merge(State().fromid(id), param.dcfields, energies[id])
         else:
-            raise NotImplementedError("unknow rotor type in Stark energy calculation.")
+            raise NotImplementedError("unknown rotor type in Stark energy calculation.")
         self.__storage.flush()
 
 
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     param.Jmin = 0
     param.Jmax_calc = 10
     param.Jmax_save =  5
-    param.fields = kV_cm2V_m(num.linspace(0., 100., 101))
+    param.dcfields = kV_cm2V_m(num.linspace(0., 100., 101))
     # save and print
     mol = Molecule(storage="molecule.hdf")
     mol.starkeffect_calculation(param)
