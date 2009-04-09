@@ -30,7 +30,7 @@ from __future__ import division
 __author__ = "Frank Filsinger"
 __version__ = "1.0 (02.03.2009)"
 
-import sys
+import getopt, sys
 import math
 import numpy
 
@@ -39,25 +39,67 @@ from jkext.convert import *
 from jkext.state import State
 
 
+def create_population(temperature, Jmax):
+    """create thermal population for |temperature| up to |Jmax|"""
+    pass
+
+
+def read_population(name):
+    """read population from file |name|"""
+    pop = []
+    for line in file(name):
+        J, Ka, Kc, M, p = line.split()
+        pop.append((State(int(J), int(Ka), int(Kc), int(M)), p))
+    return pop
+
+
 def usage():
     # ToDo implement a useful usage description
     print "See script for details"
 
 
 def main(args):
-    directory = "DOROSH_20090115/"
-    boltzmann = 1.38065053e-23 #from NIST database
-    planck = 6.62606896e-34
-    speedoflight = 299792458
-    cm2J = 100 * planck * speedoflight
-    D2cmkVcm = 1.0 / (1.0e18 * planck * speedoflight * speedoflight) # convert Debye to cm-1/(kV/cm)
-    temperature = [1.045] # temperature in K
-    Jmax = 25 # maximum J to be included
-    dipole = 1.625 # dipole moment in Debye
-    dipole = D2cmkVcm * dipole
-    input = "relativ_pop_newbin_index6.dat"
-    states = []
-    statesfile = file(input)
+    try:
+        opts, args = getopt.getopt(args[1:], "hT:p:", ["help", "temperature=", "Jmax=", "population="])
+    except getopt.GetoptError, err:
+        # print help information and exit:
+        print str(err) # will print something like "option -a not recognized"
+        usage()
+        sys.exit(2)
+    # default values
+    thermal = False
+    nonthermal = False
+    temperature = 1. # K
+    Jmax = 10
+    # scan commandline
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif o in ("-T", "--temperature"):
+            thermal = True
+            temperature = float(a)
+        elif o in ("-p", "--population"):
+            nonthermal = True
+            population = read_population(a)
+        elif o == "--Jmax":
+            Jmax = int(a)
+        else:
+            assert False, "unhandled commandline option"
+
+    if thermal == nonthermal:
+        assert False, "commandline parsing resulted in thermal == nonthermal; stopping"
+
+    if thermal == True:
+        population = create_population(temperature, Jmax)
+
+
+    for p in population:
+        print p[0].name(), p[1]
+
+    sys.exit(0)
+
+
     for state in statesfile:
        state = state[:-1]
        components = state.split(" ")
