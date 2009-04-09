@@ -48,7 +48,7 @@ def usage():
 
 def main(args):
     try:
-        opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax=", "dc-fields=",
+        opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax_calc=", "Jmax_save=", "dc-fields=",
                                                    "benzonitrile", "2,6-difluoro-iodobenzene"])
     except getopt.GetoptError, err:
         # print help information and exit:
@@ -56,20 +56,23 @@ def main(args):
         usage()
         sys.exit(2)
     # default values
-    Jmin = 0
-    Jmax = 2
     param = starkeffect.CalculationParameter
     param.dcfields = convert.kV_cm2V_m(num.linspace(0., 100., 3))
     param.isomer = 0
+    param.Jmin = 0
+    param.Jmax_calc = 5
+    param.Jmax_save = 2
     # scan commandline
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit()
         elif o == "--Jmin":
-            Jmin = int(a)
-        elif o == "--Jmax":
-            Jmax = int(a)
+            param.Jmin = int(a)
+        elif o == "--Jmax_calc":
+            param.Jmax_calc = int(a)
+        elif o == "--Jmax_save":
+            param.Jmax_save = int(a)
         elif o == "--dc-fields":
             min, max, steps = a.split(":")
             param.dcfields = convert.kV_cm2V_m(num.linspace(float(min), float(max), int(steps)))
