@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+# -*- coding: utf-8; fill-column: 120 -*-
+#
+# This file is part of JK Python extensions
+# Copyright (C) 2009 Frank Filsinger
+# Copyright (C) 2009 Jochen Küpper <software@jochen-kuepper.de>
+#
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# If you use this programm for scientific work, you must correctly reference it; see LICENSE file for details.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program. If not, see
+# <http://www.gnu.org/licenses/>.
+#
+# some SGE commands for batch usage convenience
+#$ -cwd
+#$ -e $JOB_NAME.sge
+#$ -o $JOB_NAME.sge
+#$ -S $HOME/.python/bin/python
+#$ -V
+from __future__ import division
+
+"""Calculate brute force orientation for ensemble of asymmetric top molecules"""
+
+__author__ = "Frank Filsinger"
+__version__ = "1.0 (02.03.2009)"
+
+import sys
+import math
+import numpy
+
+import jkext.molecule as molecule
+from jkext.convert import *
+from jkext.state import State
+
+
+def usage():
+    # ToDo implement a useful usage description
+    print "See script for details"
+
+
+def main(args):
+    directory = "DOROSH_20090115/"
+    boltzmann = 1.38065053e-23 #from NIST database
+    planck = 6.62606896e-34
+    speedoflight = 299792458
+    cm2J = 100 * planck * speedoflight
+    D2cmkVcm = 1.0 / (1.0e18 * planck * speedoflight * speedoflight) # convert Debye to cm-1/(kV/cm)
+    temperature = [1.045] # temperature in K
+    Jmax = 25 # maximum J to be included
+    dipole = 1.625 # dipole moment in Debye
+    dipole = D2cmkVcm * dipole
+    input = "relativ_pop_newbin_index6.dat"
+    states = []
+    statesfile = file(input)
+    for state in statesfile:
+       state = state[:-1]
+       components = state.split(" ")
+       filename = directory+"IB-"+components[0]+"-"+components[1]+"-"+components[2]+"-"+components[3]+"-stark.dat"
+       weight = components[4]
+       states.append([filename,weight])
+    # loop over temperatures
+    for i in range(len(temperature)):
+       weight_sum = 0.0
+       costheta_sum = 0.0
+       for n in range(len(states)):
+           print "file " + states[n][0] + "weight " + states[n][1]
+           starkfile = file(states[n][0])
+           datapoints = []
+           for zeile in starkfile:
+               zeile = zeile[:-1]
+               datapoints.append(zeile)
+                   #print "number of datapoints in file: ", len(datapoints)
+                   #print " first line ", datapoints[1]
+                   #print " last line ", datapoints[251]
+           datafree = datapoints[1].split(" ")
+           data250 = datapoints[251].split(" ")
+                   # get field-free energy for this state
+           energy = cm2J * float(datafree[3])
+                   # get effective dipole moment for given field strength
+           mueff = float(data250[6])
+           #w = nssw * degen * math.exp(-energy/(boltzmann*temperature[i]))
+           w = float(states[n][1])
+           weight_sum = weight_sum + w
+           costheta = mueff/dipole
+           costheta_sum = costheta_sum + w*costheta
+           print "field-free energy: ", datafree[3], " mueff @ 250 kV/cm: ", data250[6], " cos ", costheta
+       print str(weight_sum)+" "+str(costheta_sum)+" "+str(costheta_sum/weight_sum)
+
+
+if __name__ == "__main__":
+    main(sys.argv)
