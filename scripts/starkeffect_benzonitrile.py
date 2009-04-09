@@ -2,7 +2,7 @@
 # -*- coding: utf-8; fill-column: 120 -*-
 #
 # This file is part of JK Python extensions
-# Copyright (C) 2008 Jochen Küpper <software@jochen-kuepper.de>
+# Copyright (C) 2008,2009 Jochen Küpper <software@jochen-kuepper.de>
 #
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
@@ -27,7 +27,7 @@ from __future__ import division
 """Stark effect calculations for benzonitrile, based on constants from Wohlfart, Schnell, Grabow,
 Küpper, J. Mol. Spec. 247, 119-121 (2008)
 
-Copyright (C) 2008 Jochen Küpper"""
+Copyright (C) 2008,2009 Jochen Küpper"""
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
@@ -44,16 +44,20 @@ bn = molecule.Molecule(storage="benzonitrile.hdf")
 param = starkeffect.CalculationParameter
 param.isomer = 0
 param.watson = 'A'
-param.symmetry = None # 'a'
+param.symmetry = 'C2a'
 param.rotcon = convert.Hz2J(num.array([5655.2654e6, 1546.875864e6, 1214.40399e6]))
 param.quartic = convert.Hz2J(num.array([45.6, 938.1, 500, 10.95, 628]))
 param.dipole = convert.D2Cm(num.array([4.5152, 0., 0.]))
 # calculation details
 param.M = [0]
 param.Jmin = 0
-param.Jmax_calc = 5
-param.Jmax_save = 3
-param.fields = convert.kV_cm2V_m(num.linspace(0., 100., 2))
+param.Jmax_calc =  5
+param.Jmax_save =  3
+# fields
+param.dcfields = convert.kV_cm2V_m(num.linspace(0., 100., 3))
 
 # perform calculation
 bn.starkeffect_calculation(param)
+
+# close file
+del bn
