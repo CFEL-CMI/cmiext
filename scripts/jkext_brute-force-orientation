@@ -34,15 +34,40 @@ import getopt, sys
 import math
 import numpy
 
+import jkext.const as const
 import jkext.molecule as molecule
 from jkext.convert import *
 from jkext.state import State
 
 
-def create_population(temperature, Jmax):
+def create_population(mol, temperature, Jmax):
     """create thermal population for |temperature| up to |Jmax|"""
-    pass
-
+    pop = []
+    for M in range(0, Jmax+1):
+        for J in range(M, Jmax+1):
+            Ka = 0
+            for Kc in range(J, -1, -1):
+                state = State(J, Ka, Kc, M, 0)
+                energy = mol. starkeffect(state)[1][0]
+                boltzmann = math.exp(-energy/(const.boltzmann * temperature))
+                if 0 == state.M():
+                    degeneracy = 1
+                else:
+                    degeneracy = 2
+                nssw = 1
+                pop.append((state, boltzmann * degeneracy * nssw))
+                if Kc > 0:
+                    Ka += 1
+                    state = State(J, Ka, Kc, M, 0)
+                    energy = mol.starkeffect(state)[1][0]
+                    boltzmann = math.exp(-energy/(const.boltzmann * temperature))
+                    if 0 == state.M():
+                        degeneracy = 1
+                    else:
+                        degeneracy = 2
+                    nssw = 1
+                    pop.append((state, boltzmann * degeneracy * nssw))
+    return pop
 
 def read_population(name):
     """read population from file |name|"""
@@ -60,7 +85,7 @@ def usage():
 
 def main(args):
     try:
-        opts, args = getopt.getopt(args[1:], "hT:p:", ["help", "temperature=", "Jmax=", "population="])
+        opts, args = getopt.getopt(args[1:], "hJ:m:p:T:", ["help", "Jmax=", "molecule=", "temperature=", "population="])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -81,8 +106,7 @@ def main(args):
             temperature = float(a)
         elif o in ("-p", "--population"):
             nonthermal = True
-            population = read_population(a)
-        elif o == "--Jmax":
+        elif o in ("-J", "--Jmax"):
             Jmax = int(a)
         else:
             assert False, "unhandled commandline option"
@@ -90,12 +114,17 @@ def main(args):
     if thermal == nonthermal:
         assert False, "commandline parsing resulted in thermal == nonthermal; stopping"
 
-    if thermal == True:
-        population = create_population(temperature, Jmax)
+    for name in args:
+        # create Molecule object and specify storage file
+        mol = molecule.Molecule(storage=name)
+        # handle the two possible cases for the population (nonthermal != thermal is assured above)
+        if thermal == True:
+            population = create_population(mol, temperature, Jmax)
+        else:
+            population = read_population(a)
 
-
-    for p in population:
-        print p[0].name(), p[1]
+        for p in population:
+            print p[0].name(), p[1]
 
     sys.exit(0)
 
