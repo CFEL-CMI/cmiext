@@ -58,6 +58,9 @@ class CalculationParameter:
     Jmax_calc = 5
     Jmax_save = 2
     isomer = 0
+    # fields
+    acfields = num.zeros((1,), num.float64)
+    dcfields = jkext.convert.kV_cm2V_m(num.array((0, 100.), num.float64))
     # molecular parameters
     rotcon = num.zeros((3,), num.float64)    # Joule
     quartic = num.zeros((5,), num.float64)   # Joule
@@ -114,7 +117,7 @@ class AsymmetricRotor:
 
     def field_AC(self):
         """Return AC field for which the Stark energies were calculated."""
-        return self.__dcfield
+        return self.__acfield
 
 
     def field_DC(self):
