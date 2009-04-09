@@ -316,7 +316,7 @@ class AsymmetricRotor:
                 eigenvalues['N'] = eigenvalues['Ep'] + eigenvalues['Em'] + eigenvalues['Op'] + eigenvalues['Om']
                 label['N'] = label['Ep'] + label['Em'] + label['Op'] + label['Om']
             else:
-                raise NotImplementedError("Hamiltonian symmetry not implemented (yet)")
+                raise NotImplementedError("Hamiltonian symmetry %s not implemented" % (self.__symmetry, ))
             for sym in symmetries:
                 idx = num.argsort(eigenvalues[sym])
                 self.__stateorder_dict[sym] = num.array(label[sym])[idx]
