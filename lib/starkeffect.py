@@ -30,7 +30,7 @@ from jkext.state import State
 class CalculationParameter:
     """Container of parameters for calculation of Stark energies.
 
-    Calculate energy for the specified |fields| (V/m) and rotor type; all calculations are performed in representation
+    Calculate energy for the specified |dcfields| (V/m) and rotor type; all calculations are performed in representation
     Ir (x, y, z -> b, c, a).
 
     General parameters:
@@ -54,7 +54,6 @@ class CalculationParameter:
     calculations.
     """
     type = 'A'
-    fields = jkext.convert.kV_cm2V_m(num.linspace(0., 100., 2)) # V/m
     M = range(0, 2)
     Jmax_calc = 5
     Jmax_save = 2
@@ -63,6 +62,7 @@ class CalculationParameter:
     rotcon = num.zeros((3,), num.float64)    # Joule
     quartic = num.zeros((5,), num.float64)   # Joule
     dipole = num.zeros((3,), num.float64)    # Coulomb meter
+    polarizability = num.zeros((3,3), num.float64)
     watson=None
     symmetry='N'
 
@@ -71,18 +71,19 @@ class CalculationParameter:
 class AsymmetricRotor:
     """Representation of an asymmetric top for energy level calculation purposes.
 
-    This object will caclulate rotational energies at the specified field strength for the given M-value and J-range and
-    all K's.
+    This object will caclulate rotational energies at the specified AC and DC field strength for the given M-value and
+    J-range and all K's.
     """
 
-    def __init__(self, param, M, field):
+    def __init__(self, param, M, acfield=0., dcfield=0.):
         """Save the relevant parameters"""
         assert 'A' == param.type.upper()
         # we have not yet calculated the correct energies - mark invalid
         self.__valid = False
         self.__stateorder_valid = False
         # save parameters internally
-        self.__field = num.float64(field)
+        self.__acfield = num.float64(acfield)
+        self.__dcfield = num.float64(dcfield)
         self.__rotcon = num.array(param.rotcon, num.float64)
         self.__quartic = num.array(param.quartic, num.float64)
         self.__dipole = num.array(param.dipole, num.float64)
@@ -111,9 +112,14 @@ class AsymmetricRotor:
         return self.__levels[state.id()]
 
 
-    def field(self):
-        """Return field for which the Stark energies were calculated."""
-        return self.__field
+    def field_AC(self):
+        """Return AC field for which the Stark energies were calculated."""
+        return self.__dcfield
+
+
+    def field_DC(self):
+        """Return DC field for which the Stark energies were calculated."""
+        return self.__dcfield
 
 
     def states(self):
@@ -141,7 +147,7 @@ class AsymmetricRotor:
     def __recalculate(self):
         """Perform calculation of rotational state energies for current parameters"""
         self.__levels = {}
-        blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__field, self.__symmetry)
+        blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__acfield, self.__dcfield, self.__symmetry)
         for symmetry in blocks.keys():
             eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate only energies
             eval = num.sort(eval)
@@ -154,7 +160,7 @@ class AsymmetricRotor:
         self.__valid = True
 
 
-    def __full_hamiltonian(self, Jmin, Jmax, field, symmetry):
+    def __full_hamiltonian(self, Jmin, Jmax, acfield, dcfield, symmetry):
         """Return block-diagonalized Hamiltonian matrix (blocks)"""
         self.__Jmin_matrixsize = Jmin *(Jmin-1) + Jmin
         matrixsize = (Jmax + 1) * Jmax + Jmax + 1 - self.__Jmin_matrixsize
@@ -175,8 +181,10 @@ class AsymmetricRotor:
         else:
             assert self.__watson == None
         # fill matrix with appropriate Stark terms for nonzero fields
-        if None != field and self.__tiny < abs(field):
-            self.__stark(hmat, Jmin, Jmax, field)
+        if None != acfield and self.__tiny < abs(acfield):
+            self.__stark_AC(hmat, Jmin, Jmax, acfield)
+        if None != dcfield and self.__tiny < abs(dcfield):
+            self.__stark_DC(hmat, Jmin, Jmax, dcfield)
         blocks = self.__wang(hmat, symmetry, Jmin, Jmax)
         del hmat
         return blocks
@@ -195,8 +203,13 @@ class AsymmetricRotor:
                 hmat[self.__index(J, K), self.__index(J, K+2)] += value
 
 
-    def __stark(self, hmat, Jmin, Jmax, field):
-        """Add the Stark-effect matrix element terms to hmat"""
+    def __stark_AC(self, hmat, Jmin, Jmax, acfield):
+        """Add the ac Stark-effect matrix element terms to hmat"""
+        pass
+
+
+    def __stark_DC(self, hmat, Jmin, Jmax, dcfield):
+        """Add the dc Stark-effect matrix element terms to hmat"""
         sqrt = num.sqrt
         M = self.__M
         muA, muB, muC = self.__dipole
@@ -205,30 +218,30 @@ class AsymmetricRotor:
             for J in range(Jmin, Jmax):
                 for K in range(-J, J+1):
                     if 0 != J:
-                        hmat[self.__index(J, K), self.__index(J, K)] += -muA * field * M * K / (J*(J+1))
-                    value = (-muA * field * sqrt((J+1)**2 - K**2) * sqrt((J+1)**2 - M**2)
+                        hmat[self.__index(J, K), self.__index(J, K)] += -muA * dcfield * M * K / (J*(J+1))
+                    value = (-muA * dcfield * sqrt((J+1)**2 - K**2) * sqrt((J+1)**2 - M**2)
                               / ((J+1) * sqrt((2*J+1) * (2*J+3))))
                     hmat[self.__index(J+1, K), self.__index(J, K)] += value
                     hmat[self.__index(J, K), self.__index(J+1, K)] += value
             # final diagonal elements
             J = Jmax
             for K in range(-J, J+1):
-                hmat[self.__index(J, K), self.__index(J, K)] += -1. * M * K / (J*(J+1)) * muA * field
+                hmat[self.__index(J, K), self.__index(J, K)] += -1. * M * K / (J*(J+1)) * muA * dcfield
         if self.__dipole_components[1]:
             # matrix elements involving µ_b
             for J in range(Jmin, Jmax):
                 for K in range(-J, J+1):
                     if 0 != J:
-                        value = -1 * M * muB * field * (sqrt((J-K) * (J+K+1) ) ) / (2*J*(J+1))
+                        value = -1 * M * muB * dcfield * (sqrt((J-K) * (J+K+1) ) ) / (2*J*(J+1))
                         hmat[self.__index(J, K+1), self.__index(J, K)] += value
                         hmat[self.__index(J, K), self.__index(J, K+1)] += value
                     # J+1, K+1 / J-1, K-1 case
-                    value = (muB * field * sqrt(((J+K+1) * (J+K+2)) * ((J+1)**2 - M**2))
+                    value = (muB * dcfield * sqrt(((J+K+1) * (J+K+2)) * ((J+1)**2 - M**2))
                              / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
                     hmat[self.__index(J+1, K+1), self.__index(J, K)] += value
                     hmat[self.__index(J, K), self.__index(J+1, K+1)] += value
                     # J+1, K-1 / J-1, K+1 case
-                    value = (-1 * muB * field * sqrt(((J-K+1) * (J-K+2)) * ((J+1)**2 - M**2))
+                    value = (-1 * muB * dcfield * sqrt(((J-K+1) * (J-K+2)) * ((J+1)**2 - M**2))
                               / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
                     hmat[self.__index(J+1, K-1), self.__index(J, K)] += value
                     hmat[self.__index(J, K), self.__index(J+1, K-1)] += value
@@ -237,16 +250,16 @@ class AsymmetricRotor:
             for J in range(Jmin, Jmax):
                 for K in range(-J, J+1):
                     if 0 != J:
-                        value = 1j* M * muC * field * sqrt((J-K) * (J+K+1)) / (2*J*(J+1))
+                        value = 1j* M * muC * dcfield * sqrt((J-K) * (J+K+1)) / (2*J*(J+1))
                         hmat[self.__index(J, K+1), self.__index(J, K)] += value
                         hmat[self.__index(J, K), self.__index(J, K+1)] += value
                     # J+1, K+1 / J-1, K-1 case
-                    value = (-1j * muC * field * sqrt((J+K+1) * (J+K+2)) * sqrt((J+1)**2 - M**2)
+                    value = (-1j * muC * dcfield * sqrt((J+K+1) * (J+K+2)) * sqrt((J+1)**2 - M**2)
                               / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
                     hmat[self.__index(J+1, K+1), self.__index(J, K)] += value
                     hmat[self.__index(J, K), self.__index(J+1, K+1)] += value
                     # J+1, K-1 / J-1, K+1 case
-                    value = (-1j  * muC * field * sqrt((J-K+1) * (J-K+2)) * sqrt((J+1)**2 - M**2)
+                    value = (-1j  * muC * dcfield * sqrt((J-K+1) * (J-K+2)) * sqrt((J+1)**2 - M**2)
                               / (2*(J+1) * sqrt((2*J+1) * (2*J+3))))
                     hmat[self.__index(J+1, K-1), self.__index(J, K)] += value
                     hmat[self.__index(J, K), self.__index(J+1, K-1)] += value
@@ -293,7 +306,7 @@ class AsymmetricRotor:
                 if 0 == J:
                     blocks = {'Ep': num.zeros((1, 1), num.float64)}
                 else:
-                    blocks = self.__full_hamiltonian(J, J, None, 'V')
+                    blocks = self.__full_hamiltonian(J, J, None, None, 'V')
                 # store sorted eigenenergies for respective J and block
                 for sym in blocks.keys():
                     if 0 < blocks[sym].size:
@@ -427,12 +440,12 @@ if __name__ == "__main__":
     p.quartic = jkext.convert.Hz2J([1e3, 1e3, 1e3, 1e3, 1e3])
     p.watson = 'A'
     p.dipole = jkext.convert.D2Cm([1., 1., 1.])
-    top = AsymmetricRotor(p, 0, 0.)
+    top = AsymmetricRotor(p, 0, 0., 0.)
     for state in [State(0, 0, 0, 0, 0),
                   State(1, 0, 1, 0, 0), State(1, 1, 1, 0, 0), State(1, 1, 0, 0, 0),
                   State(2, 1, 2, 0, 0)]:
         print state.name(), "%10.3f" % (jkext.convert.J2Hz(top.energy(state)) / 1e6,)
-    top = AsymmetricRotor(p, 0, jkext.convert.kV_cm2V_m(100.))
+    top = AsymmetricRotor(p, 0, 0., jkext.convert.kV_cm2V_m(100.))
     for state in [State(0, 0, 0, 0, 0),
                   State(1, 0, 1, 0, 0), State(1, 1, 1, 0, 0), State(1, 1, 0, 0, 0),
                   State(2, 1, 2, 0, 0)]:
