@@ -59,8 +59,6 @@ def main(args):
         if o in ("-h", "--help"):
             usage()
             sys.exit()
-        elif o in ("-s", "--storage"):
-            storagename = a
         elif o == "--Jmin":
             Jmin = int(a)
         elif o == "--Jmax":
