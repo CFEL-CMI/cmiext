@@ -48,7 +48,8 @@ def usage():
 
 def main(args):
     try:
-        opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax_calc=", "Jmax_save=", "dc-fields=",
+        opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax_calc=", "Jmax_save=", "Mmax=",
+                                                     "dc-fields=",
                                                    "benzonitrile", "2,6-difluoro-iodobenzene"])
     except getopt.GetoptError, err:
         # print help information and exit:
@@ -62,11 +63,14 @@ def main(args):
     param.Jmin = 0
     param.Jmax_calc = 5
     param.Jmax_save = 2
+    param.M = None
     # scan commandline
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit()
+        elif o == "--Mmax":
+            param.M = range(0, int(a)+1)
         elif o == "--Jmin":
             param.Jmin = int(a)
         elif o == "--Jmax_calc":
@@ -93,6 +97,9 @@ def main(args):
             param.dipole = convert.D2Cm(num.array([2.25, 0., 0.]))
         else:
             assert False, "unhandled commandline option"
+
+    if None == param.M:
+        param.M = range(0, param.Jmax_save+1)
 
     # perform calculation
     mol = molecule.Molecule(storage=name+".hdf")
