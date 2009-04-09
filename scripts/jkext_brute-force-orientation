@@ -27,16 +27,15 @@ from __future__ import division
 
 """Calculate brute force orientation for ensemble of asymmetric top molecules"""
 
-__author__ = "Frank Filsinger"
-__version__ = "1.0 (02.03.2009)"
+__author__ = "Frank Filsinger and Jochen Küpper"
 
 import getopt, sys
 import math
 import numpy
 
 import jkext.const as const
+import jkext.convert as convert
 import jkext.molecule as molecule
-from jkext.convert import *
 from jkext.state import State
 
 
@@ -48,7 +47,7 @@ def create_population(mol, temperature, Jmax):
             Ka = 0
             for Kc in range(J, -1, -1):
                 state = State(J, Ka, Kc, M, 0)
-                energy = mol. starkeffect(state)[1][0]
+                energy = mol.starkeffect(state)[1][0]
                 boltzmann = math.exp(-energy/(const.boltzmann * temperature))
                 if 0 == state.M():
                     degeneracy = 1
@@ -69,6 +68,7 @@ def create_population(mol, temperature, Jmax):
                     pop.append((state, boltzmann * degeneracy * nssw))
     return pop
 
+
 def read_population(name):
     """read population from file |name|"""
     pop = []
@@ -85,7 +85,7 @@ def usage():
 
 def main(args):
     try:
-        opts, args = getopt.getopt(args[1:], "hJ:m:p:T:", ["help", "Jmax=", "molecule=", "temperature=", "population="])
+        opts, args = getopt.getopt(args[1:], "hJ:m:p:T:", ["help", "Jmax=", "molecule=", "mu=", "population=", "temperature="])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -94,6 +94,7 @@ def main(args):
     # default values
     thermal = False
     nonthermal = False
+    field = 0. # kV/cm
     temperature = 1. # K
     Jmax = 10
     # scan commandline
@@ -101,11 +102,15 @@ def main(args):
         if o in ("-h", "--help"):
             usage()
             sys.exit()
+        elif o in ("-f", "--field"):
+            field = convert.kV_cm2V_m(float(a))
         elif o in ("-T", "--temperature"):
             thermal = True
             temperature = float(a)
         elif o in ("-p", "--population"):
             nonthermal = True
+        elif o in ("--mu",):
+            mu = convert.D2Cm(float(a))
         elif o in ("-J", "--Jmax"):
             Jmax = int(a)
         else:
@@ -117,51 +122,27 @@ def main(args):
     for name in args:
         # create Molecule object and specify storage file
         mol = molecule.Molecule(storage=name)
+        # create population
         # handle the two possible cases for the population (nonthermal != thermal is assured above)
         if thermal == True:
             population = create_population(mol, temperature, Jmax)
         else:
             population = read_population(a)
-
+        # calculate orientation cosine -- loop over states
+        cos_theta = 0.
+        weight = 0.
         for p in population:
-            print p[0].name(), p[1]
-
-    sys.exit(0)
-
-
-    for state in statesfile:
-       state = state[:-1]
-       components = state.split(" ")
-       filename = directory+"IB-"+components[0]+"-"+components[1]+"-"+components[2]+"-"+components[3]+"-stark.dat"
-       weight = components[4]
-       states.append([filename,weight])
-    # loop over temperatures
-    for i in range(len(temperature)):
-       weight_sum = 0.0
-       costheta_sum = 0.0
-       for n in range(len(states)):
-           print "file " + states[n][0] + "weight " + states[n][1]
-           starkfile = file(states[n][0])
-           datapoints = []
-           for zeile in starkfile:
-               zeile = zeile[:-1]
-               datapoints.append(zeile)
-                   #print "number of datapoints in file: ", len(datapoints)
-                   #print " first line ", datapoints[1]
-                   #print " last line ", datapoints[251]
-           datafree = datapoints[1].split(" ")
-           data250 = datapoints[251].split(" ")
-                   # get field-free energy for this state
-           energy = cm2J * float(datafree[3])
-                   # get effective dipole moment for given field strength
-           mueff = float(data250[6])
-           #w = nssw * degen * math.exp(-energy/(boltzmann*temperature[i]))
-           w = float(states[n][1])
-           weight_sum = weight_sum + w
-           costheta = mueff/dipole
-           costheta_sum = costheta_sum + w*costheta
-           print "field-free energy: ", datafree[3], " mueff @ 250 kV/cm: ", data250[6], " cos ", costheta
-       print str(weight_sum)+" "+str(costheta_sum)+" "+str(costheta_sum/weight_sum)
+            state = p[0]
+            w = p[1]
+            mueff = 0
+            fields, mueffs = mol.mueff(state)
+            for i in range(len(fields)):
+                if fields[i] > field:
+                    mueff = mueffs[i]
+            cos_theta += w * mueff / mu
+            weight += w
+        cos_theta /= weight
+        print "%s: <cosθ> = %g" % (name, cos_theta)
 
 
 if __name__ == "__main__":
