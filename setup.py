@@ -29,7 +29,7 @@ setup(name="jkext",
       long_description    = long_description,
       package_dir         = {'jkext': 'lib'},
       packages            = ['jkext'],
-      scripts             = ['script/jkext_brute-force-orientation',
+      scripts             = ['scripts/jkext_brute-force-orientation',
                              'scripts/jkext_calculate_energy',
                              'scripts/jkext_plot_energy',
                              'scripts/jkext_print_energy']
