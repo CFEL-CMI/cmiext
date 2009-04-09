@@ -67,13 +67,12 @@ def main(args):
         else:
             assert False, "unhandled commandline option"
 
-    plt.clf()
     # loop over all remaining arguments -- asumming its filenames of HDF5 Stark-files
     for name in args:
-        print name
+        plt.figure(1)
         # create Molecule object and specify storage file
         mol = molecule.Molecule(storage=name)
-
+        # plot energies
         for J in range(Jmin, Jmax+1):
             Ka = 0
             for Kc in range(J, -1, -1):
@@ -85,7 +84,19 @@ def main(args):
                     state = State(J, Ka, Kc, 0, 0)
                     fields, energies = mol.starkeffect(state)
                     plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6)
-
+        plt.figure(2)
+        # plot effective dipole moment
+        for J in range(Jmin, Jmax+1):
+            Ka = 0
+            for Kc in range(J, -1, -1):
+                state = State(J, Ka, Kc, 0, 0)
+                fields, mueff = mol.mueff(state)
+                plt.plot(V_m2kV_cm(fields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1))
+                if Kc > 0:
+                    Ka += 1
+                    state = State(J, Ka, Kc, 0, 0)
+                    fields, mueff = mol.mueff(state)
+                    plt.plot(V_m2kV_cm(fields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1))
     plt.show()
 
 
