@@ -4,11 +4,11 @@ JK Python extensions
 * License
 
 The JK Python extensions are
-  Copyright (C) 2008 Jochen Küpper
+  Copyright (C) 2008,2009 Jochen Küpper
 See License for details.
 
 
-* Prerequisites 
+* Prerequisites
 
 The extension package rests on the shoulders of giants, i.e., you need
 a recent Python 2.x system and some other important Python packages,
@@ -23,7 +23,7 @@ Distribution, for example.
 * Installation
 
 Adminstrator installation:
-    python setup.py install --home=$HOME/.python
+    python setup.py install
 
 In order to install this extension module in user-space, run
     python setup.py install --home=$HOME/.python
