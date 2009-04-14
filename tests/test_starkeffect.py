@@ -63,7 +63,7 @@ class Test_StarkCalculation_benzonitrile(unittest.TestCase):
         self.param.Jmin = 0
         self.param.Jmax_calc = 15
         self.param.Jmax_save =  3
-        self.param.fields = convert.kV_cm2V_m(num.linspace(0., 100., 5))
+        self.param.dcfields = convert.kV_cm2V_m(num.linspace(0., 100., 5))
         self.bn.starkeffect_calculation(self.param)
 
     def tearDown(self):
