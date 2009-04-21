@@ -323,6 +323,8 @@ class AsymmetricRotor:
                 eigenvalues['O'] = eigenvalues['Op'] + eigenvalues['Om']
                 label['E'] = label['Ep'] + label['Em']
                 label['O'] = label['Op'] + label['Om']
+                del eigenvalues['Ep'], eigenvalues['Em'], eigenvalues['Op'], eigenvalues['Om']
+                del label['Ep'], label['Em'], label['Op'], label['Om']
             elif 'C2b' == self.__symmetry:
                 raise NotImplementedError
             elif 'C2c' == self.__symmetry:
@@ -331,6 +333,8 @@ class AsymmetricRotor:
                 symmetries = ['N']
                 eigenvalues['N'] = eigenvalues['Ep'] + eigenvalues['Em'] + eigenvalues['Op'] + eigenvalues['Om']
                 label['N'] = label['Ep'] + label['Em'] + label['Op'] + label['Om']
+                del eigenvalues['Ep'], eigenvalues['Em'], eigenvalues['Op'], eigenvalues['Om']
+                del label['Ep'], label['Em'], label['Op'], label['Om']
             else:
                 raise NotImplementedError("Hamiltonian symmetry %s not implemented" % (self.__symmetry, ))
             for sym in symmetries:
