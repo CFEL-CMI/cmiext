@@ -271,7 +271,7 @@ class AsymmetricRotor:
     def __stateorder(self, symmetry):
         """Return a list with all states for the given |symmetry| and the current calculation parameters (Jmin, Jmax).
 
-        Needs to be finished!
+        Needs to be finished for C2b and C2c!
         """
         if False == self.__stateorder_valid:
             self.__stateorder_dict = {}
@@ -398,14 +398,14 @@ class AsymmetricRotor:
             raise NotImplementedError("Hamiltonian symmetry 'C2b' not implemented yet")
             # C2 rotation about b-axis is symmetry element
             #
-            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices ? (contains ee and oo)
-            # and ? (contains eo and oe).
+            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices ?? (contains ee and oo)
+            # and ?? (contains eo and oe).
             # In this case E and O corresponds to columns with Ka even and odd, respectively.
         elif symmetry == 'C2c':
             # C2 rotation about c-axis is symmetry element
             #
-            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices ? (contains ee and oe)
-            # and ? (contains eo and oo).
+            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices ?? (contains ee and oe)
+            # and ?? (contains eo and oo).
             # In this case ? and ? corresponds to columns with Kc even and odd, respectively.
             raise NotImplementedError("Hamiltonian symmetry 'C2c' not implemented yet")
         else:
