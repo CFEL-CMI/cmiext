@@ -39,8 +39,23 @@ import jkext.molecule as molecule
 from jkext.state import State
 
 
-def create_population(mol, temperature, Jmax):
+def create_population(mol, temperature, Jmax, nsswtype, nssweights):
     """create thermal population for |temperature| up to |Jmax|"""
+
+    def nssw(state, nsswtype, nssweights):
+        """Calculate nuclkear spin statistical weight of |state|"""
+        if nsswtype == None:
+            return 1
+        elif nsswtype == "Ka":
+            assert 2 == len(nssweights), "Wrong number of weights for nssw-type = Ka"
+            if 0 == state.Ka() % 2:
+                return nssweights[0]
+            else:
+                return nssweights[1]
+        else:
+            assert False, "Unhandled nuclear spin statistical weight"
+
+
     pop = []
     for M in range(0, Jmax+1):
         for J in range(M, Jmax+1):
@@ -53,8 +68,7 @@ def create_population(mol, temperature, Jmax):
                     degeneracy = 1
                 else:
                     degeneracy = 2
-                nssw = 1
-                pop.append((state, boltzmann * degeneracy * nssw))
+                    pop.append((state, boltzmann * degeneracy * nssw(state, nsswtype, nssweights)))
                 if Kc > 0:
                     Ka += 1
                     state = State(J, Ka, Kc, M, 0)
@@ -64,8 +78,7 @@ def create_population(mol, temperature, Jmax):
                         degeneracy = 1
                     else:
                         degeneracy = 2
-                    nssw = 1
-                    pop.append((state, boltzmann * degeneracy * nssw))
+                    pop.append((state, boltzmann * degeneracy * nssw(state, nsswtype, nssweights)))
     return pop
 
 
@@ -85,7 +98,9 @@ def usage():
 
 def main(args):
     try:
-        opts, args = getopt.getopt(args[1:], "hJ:m:p:T:", ["help", "Jmax=", "molecule=", "mu=", "population=", "temperature="])
+        opts, args = getopt.getopt(args[1:], "hJ:m:p:T:", ["help",
+                                                           "field=", "Jmax=", "mu=", "nssw=", "nssw-type=",
+                                                           "population=", "temperature="])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -97,6 +112,8 @@ def main(args):
     field = 0. # kV/cm
     temperature = 1. # K
     Jmax = 10
+    nsswtype = None
+    nssw = None
     # scan commandline
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -104,15 +121,24 @@ def main(args):
             sys.exit()
         elif o in ("-f", "--field"):
             field = convert.kV_cm2V_m(float(a))
+        elif o in ("-J", "--Jmax"):
+            Jmax = int(a)
+        elif o in ("--mu",):
+            mu = convert.D2Cm(float(a))
+        elif o in ("--nssw",):
+            nssw = map(int, a.split(":"))
+        elif o in ("--nssw-type",):
+            if a == "None":
+                nsswtype = None
+            elif a in ("Ka", "K-1"):
+                nsswtype = "Ka"
+            else:
+                assert False, "unknown NSSW-type %s" % (a, )
+        elif o in ("-p", "--population"):
+            nonthermal = True
         elif o in ("-T", "--temperature"):
             thermal = True
             temperature = float(a)
-        elif o in ("-p", "--population"):
-            nonthermal = True
-        elif o in ("--mu",):
-            mu = convert.D2Cm(float(a))
-        elif o in ("-J", "--Jmax"):
-            Jmax = int(a)
         else:
             assert False, "unhandled commandline option"
 
@@ -125,7 +151,7 @@ def main(args):
         # create population
         # handle the two possible cases for the population (nonthermal != thermal is assured above)
         if thermal == True:
-            population = create_population(mol, temperature, Jmax)
+            population = create_population(mol, temperature, Jmax, nsswtype, nssw)
         else:
             population = read_population(a)
         # calculate orientation cosine -- loop over states
@@ -137,8 +163,13 @@ def main(args):
             mueff = 0
             fields, mueffs = mol.mueff(state)
             for i in range(len(fields)):
-                if fields[i] > field:
-                    mueff = mueffs[i]
+                if fields[i] >= field:
+                    if 0 == i or fields[i] == field:
+                        mueff = mueffs[i]
+                    else:
+                        fieldstep = fields[i] - fields[i-1]
+                        mueff = (field-fields[i-1])/fieldstep * mueffs[i] + (fields[i]-field)/fieldstep * mueffs[i-1]
+                    break
             cos_theta += w * mueff / mu
             weight += w
         cos_theta /= weight
