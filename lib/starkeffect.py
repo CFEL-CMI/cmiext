@@ -271,7 +271,8 @@ class AsymmetricRotor:
     def __stateorder(self, symmetry):
         """Return a list with all states for the given |symmetry| and the current calculation parameters (Jmin, Jmax).
 
-        Needs to be finished for C2b and C2c!
+        Needs to be finished for C2b and C2c! Split labels and eigenvlaues into eight blocks for each of J Ka Kc 'e' or
+        'o'. Then we can merge them differently for J even and odd, such that they provide the correct state labeling.
         """
         if False == self.__stateorder_valid:
             self.__stateorder_dict = {}
@@ -326,8 +327,10 @@ class AsymmetricRotor:
                 del eigenvalues['Ep'], eigenvalues['Em'], eigenvalues['Op'], eigenvalues['Om']
                 del label['Ep'], label['Em'], label['Op'], label['Om']
             elif 'C2b' == self.__symmetry:
+                symmetries = ['Ab', 'ac']
                 raise NotImplementedError
             elif 'C2c' == self.__symmetry:
+                symmetries = ['Ac', 'ab']
                 raise NotImplementedError
             elif 'N' == self.__symmetry:
                 symmetries = ['N']
@@ -398,15 +401,13 @@ class AsymmetricRotor:
             raise NotImplementedError("Hamiltonian symmetry 'C2b' not implemented yet")
             # C2 rotation about b-axis is symmetry element
             #
-            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices ?? (contains ee and oo)
-            # and ?? (contains eo and oe).
-            # In this case E and O corresponds to columns with Ka even and odd, respectively.
+            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices 'Ab' (contains ee and oo)
+            # and 'ac' (contains eo and oe).
         elif symmetry == 'C2c':
             # C2 rotation about c-axis is symmetry element
             #
-            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices ?? (contains ee and oe)
-            # and ?? (contains eo and oo).
-            # In this case ? and ? corresponds to columns with Kc even and odd, respectively.
+            # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices 'Ac' (contains ee and oe)
+            # and 'ab' (contains eo and oo).
             raise NotImplementedError("Hamiltonian symmetry 'C2c' not implemented yet")
         else:
             # something went wrong
