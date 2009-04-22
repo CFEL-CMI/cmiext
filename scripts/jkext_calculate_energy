@@ -49,8 +49,8 @@ def usage():
 def main(args):
     try:
         opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax_calc=", "Jmax_save=", "Mmax=",
-                                                     "dc-fields=",
-                                                   "benzonitrile", "2,6-difluoro-iodobenzene"])
+                                                   "dc-fields=",
+                                                   "2,6-difluoro-iodobenzene", "benzonitrile", "iodobenzene", ])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -103,7 +103,7 @@ def main(args):
             param.symmetry = 'C2a'
             param.rotcon = convert.Hz2J(num.array([5669.126e6, 750.414323e6, 662.636162e6]))
             param.quartic = convert.Hz2J(num.array([19.5479, 164.648, 891, 2.53098, 15554]))
-            # param.sextic =  convert.Hz2J(num.array([0.0609, -0.377])) # ignored, see paper for details!
+            # param.sextic =  convert.Hz2J(num.array([0.0609, -0.377])) # ignored sextic constants!
             param.dipole = convert.D2Cm(num.array([1.6250, 0., 0.]))
         else:
             assert False, "unhandled commandline option"
