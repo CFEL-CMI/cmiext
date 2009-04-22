@@ -80,6 +80,14 @@ def main(args):
         elif o == "--dc-fields":
             min, max, steps = a.split(":")
             param.dcfields = convert.kV_cm2V_m(num.linspace(float(min), float(max), int(steps)))
+        elif o == "--2,6-difluoro-iodobenzene":
+            # parmaters from simple ab initio calculations
+            name = "2,6-difluoro-iodobenzene"
+            param.watson = 'A'
+            param.symmetry = 'C2a'
+            param.rotcon = convert.Hz2J(num.array([1740e6, 713e6, 506e6]))
+            param.quartic = convert.Hz2J(num.array([0., 0., 0., 0., 0.]))
+            param.dipole = convert.D2Cm(num.array([2.25, 0., 0.]))
         elif o == "--benzonitrile":
             # Wohlfart, Schnell, Grabow, Küpper, J. Mol. Spec. 247, 119-121 (2008)
             name = "benzonitrile"
@@ -88,13 +96,15 @@ def main(args):
             param.rotcon = convert.Hz2J(num.array([5655.2654e6, 1546.875864e6, 1214.40399e6]))
             param.quartic = convert.Hz2J(num.array([45.6, 938.1, 500, 10.95, 628]))
             param.dipole = convert.D2Cm(num.array([4.5152, 0., 0.]))
-        elif o == "--2,6-difluoro-iodobenzene":
-            name = "2,6-difluoro-iodobenzene"
+        elif o == "--iodobenzene":
+            # Dorosh, Bialkowskajaworska, Kisiel, Pszczolkowski,  J. Mol. Spec. 246, 228-232 (2007)
+            name = "iodobenzene"
             param.watson = 'A'
             param.symmetry = 'C2a'
-            param.rotcon = convert.Hz2J(num.array([1740e6, 713e6, 506e6]))
-            param.quartic = convert.Hz2J(num.array([0., 0., 0., 0., 0.]))
-            param.dipole = convert.D2Cm(num.array([2.25, 0., 0.]))
+            param.rotcon = convert.Hz2J(num.array([5669.126e6, 750.414323e6, 662.636162e6]))
+            param.quartic = convert.Hz2J(num.array([19.5479, 164.648, 891, 2.53098, 15554]))
+            # param.sextic =  convert.Hz2J(num.array([0.0609, -0.377])) # ignored, see paper for details!
+            param.dipole = convert.D2Cm(num.array([1.6250, 0., 0.]))
         else:
             assert False, "unhandled commandline option"
 
