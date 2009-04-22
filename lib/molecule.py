@@ -235,7 +235,6 @@ class Molecule:
 
 # some simple tests
 if __name__ == "__main__":
-    print
     # test Stark calculation and storage/retrieval
     from convert import *
     param = jkext.starkeffect.CalculationParameter
