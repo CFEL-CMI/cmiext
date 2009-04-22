@@ -64,10 +64,14 @@ class State:
         return self
 
     def fromhdfname(self, hdfname):
-        """Set quantum-numbers form hdf name"""
-        qn = num.array(hdfname.split('_'))
-        J, Ka, Kc, M, iso = qn[1:-1].tolist()
-        self.__initialize(num.uint64(J), num.uint64(Ka), num.uint64(Kc), num.uint64(M), num.uint64(iso))
+        """Set quantum-numbers form hdf name.
+
+        See hdfname() below for a description of the format.
+        """
+        qn = num.array(hdfname.split('/'))
+        J, Ka, Kc, M, iso = qn.tolist()
+        self.__initialize(num.uint64(J[1:]), num.uint64(Ka[1:]), num.uint64(Kc[1:]), num.uint64(M[1:]), num.uint64(iso[1:]))
+        # print J, Ka, Kc, M, iso, "-->", self.__labels
         return self
 
     def id(self):
@@ -77,7 +81,13 @@ class State:
         return "%d %d %d %d %d" % self.totuple()
 
     def hdfname(self):
-        return "_%d_%d_%d_%d_%d_" % self.totuple()
+        """Create HDF5 storage file name of state.
+
+        Prepend '_' to all numbers to make them valid Python identifiers. We split the individual quantum numbers by '/'
+        in order to provide subgrouping for faster transversal of the HDF5 directory.
+        """
+        # print "hdfname:", self.__labels, ":", "_%d/_%d/_%d/_%d/_%d" % self.totuple()
+        return "_%d/_%d/_%d/_%d/_%d" % self.totuple()
 
     def toarray(self):
         return self.__labels

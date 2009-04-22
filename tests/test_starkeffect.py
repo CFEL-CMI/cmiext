@@ -45,7 +45,7 @@ class Test_StarkCalculation_benzonitrile(unittest.TestCase):
     """Test the results of Stark effect calculations using the molecular parameters of benzonitrile"""
 
     def setUp(self):
-        self.storagename = "test_starkeffect.hdf"
+        self.storagename = "__jkext_test_starkeffect.hdf"
         if os.path.exists(self.storagename):
             raise EnvironmentError("Test storage file already exists, not overwriting")
         # create Molecule object and specify storage file
@@ -68,7 +68,6 @@ class Test_StarkCalculation_benzonitrile(unittest.TestCase):
 
     def tearDown(self):
         os.remove(self.storagename)
-
 
     def test_fieldfree(self):
         self.assertAlmostEqual(0., self.bn.starkeffect(State(0, 0, 0, 0, 0))[1][0], 7, "Field-free ground state energy is wrong")
