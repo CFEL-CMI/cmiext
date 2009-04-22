@@ -28,19 +28,17 @@ def readVLArray(file, name):
 
 
 def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float64Atom(shape=()),
-                 filters=tables.Filters(complevel=9, complib='zlib')):
-    root = file.root
-    # make sure the group exists
-    try:
-        group = file.getNode(root, groupname)
-    except tables.exceptions.NodeError:
-        group = root
-        for name in groupname.split('/'):
-            if 0 < len(name):
-                try:
-                    group = file.createGroup(group, name)
-                except tables.exceptions.NodeError:
-                    pass
+                 filters=tables.Filters(complevel=3, complib='zlib')):
+    # make sure the group-tree exists
+    group = file.root
+    for name in groupname.split('/'):
+        try:
+            group = file.getNode(group, name)
+        except tables.exceptions.NodeError:
+            try:
+                group = file.createGroup(group, name)
+            except tables.exceptions.NodeError:
+                assert False, "Stark storage error: cannot create non-existing group %s from %s!" % (name, groupname)
     # if the dataset exists already, delete it
     try:
         file.removeNode(group, leafname)
