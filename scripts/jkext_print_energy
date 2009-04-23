@@ -70,20 +70,26 @@ def main(args):
     for name in args:
         # create Molecule object and specify storage file
         mol = molecule.Molecule(storage=name)
-
+        # loop over state
         for J in range(Jmin, Jmax+1):
             Ka = 0
             for Kc in range(J, -1, -1):
                 state = State(J, Ka, Kc, 0, 0)
                 fields, energies = mol.starkeffect(state)
                 fields, mueff = mol.mueff(state)
-                print state.name(), V_m2kV_cm(fields), J2Hz(energies) / 1e6, J2Hz(mueff / V_m2kV_cm(1)) / 1e6
+                assert len(fields) == len(energies) and  len(fields) == len(mueff), "HDF5 storage file is corrupted"
+                print "# state:", state.name()
+                for i in range(len(fields)):
+                    print V_m2kV_cm(fields[i]), J2Hz(energies[i]) / 1e6, J2Hz(mueff[i] / V_m2kV_cm(1)) / 1e6
                 if Kc > 0:
                     Ka += 1
                     state = State(J, Ka, Kc, 0, 0)
                     fields, energies = mol.starkeffect(state)
                     fields, mueff = mol.mueff(state)
-                    print state.name(), V_m2kV_cm(fields), J2Hz(energies) / 1e6, J2Hz(mueff / V_m2kV_cm(1)) / 1e6
+                    assert len(fields) == len(energies) and  len(fields) == len(mueff), "HDF5 storage file is corrupted"
+                    print "# state:", state.name()
+                    for i in range(len(fields)):
+                        print V_m2kV_cm(fields[i]), J2Hz(energies[i]) / 1e6, J2Hz(mueff[i] / V_m2kV_cm(1)) / 1e6
 
 
 if __name__ == "__main__":
