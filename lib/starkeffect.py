@@ -278,86 +278,62 @@ class AsymmetricRotor:
             self.__stateorder_dict = {}
             M = self.__M
             iso = self.__isomer
-            eigenvalues = {'eEp': [], 'eEm': [], 'eOp': [], 'eOm': [], 'oEp': [], 'oEm': [], 'oOp': [], 'oOm': []}
-            label = {'eEp': [], 'eEm': [], 'eOp': [], 'eOm': [], 'oEp': [], 'oEm': [], 'oOp': [], 'oOm': []}
+            eigenvalues = {'A': [], 'Ba': [], 'Bb': [], 'Bc': []}
+            label = {'A': [], 'Ba': [], 'Bb': [], 'Bc': []}
             for J in range(M, self.__Jmax+1):
                 Ka = 0
-                if 0 == J%2: # J even
-                    for Kc in range(J,-1,-1):
-                        if Ka%2 == 0 and Kc%2 == 0:  label['eEp'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 == 0 and Kc%2 !=0: label['eEm'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 != 0 and Kc%2 ==0: label['eOp'].append(State(J, Ka, Kc, M, iso))
-                        else:                        label['eOm'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
-                        if Kc > 0:
-                            Ka = Ka+1
-                            if Ka%2 == 0 and Kc%2 == 0:   label['eEp'].append(State(J, Ka, Kc, M, iso))
-                            elif Ka%2 == 0 and Kc%2 != 0: label['eEm'].append(State(J, Ka, Kc, M, iso))
-                            elif Ka%2 != 0 and Kc%2 == 0: label['eOp'].append(State(J, Ka, Kc, M, iso))
-                            else:                         label['eOm'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
-                else: # J odd
-                    for Kc in range(J,-1,-1):
-                        if Ka%2 ==0 and Kc%2 == 0:   label['oEm'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 ==0 and Kc%2 != 0: label['oEp'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 !=0 and Kc%2 == 0: label['oOm'].append(State(J, Ka, Kc, M, iso))
-                        else:                        label['oOp'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
-                        if Kc > 0:
-                            Ka = Ka+1
-                            if ((Ka%2==0) and  (Kc%2==0)):   label['oEm'].append(State(J, Ka, Kc, M, iso))
-                            elif ((Ka%2==0) and  (Kc%2!=0)): label['oEp'].append(State(J, Ka, Kc, M, iso))
-                            elif ((Ka%2!=0) and  (Kc%2==0)): label['oOm'].append(State(J, Ka, Kc, M, iso))
-                            else:                            label['oOp'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                for Kc in range(J,-1,-1):
+                    if Ka%2 == 0 and Kc%2 == 0:  label['A'].append(State(J, Ka, Kc, M, iso))  # ee
+                    elif Ka%2 == 0 and Kc%2 !=0: label['Ba'].append(State(J, Ka, Kc, M, iso)) # eo
+                    elif Ka%2 != 0 and Kc%2 !=0: label['Bb'].append(State(J, Ka, Kc, M, iso)) # oo
+                    else:                        label['Bc'].append(State(J, Ka, Kc, M, iso)) # oe (Ka%2 != 0 and Kc%2 == 0)
+                    if Kc > 0:
+                        Ka = Ka+1
+                        if Ka%2 == 0 and Kc%2 == 0:   label['A'].append(State(J, Ka, Kc, M, iso))  # ee
+                        elif Ka%2 == 0 and Kc%2 != 0: label['Ba'].append(State(J, Ka, Kc, M, iso)) # eo
+                        elif Ka%2 != 0 and Kc%2 != 0: label['Bb'].append(State(J, Ka, Kc, M, iso)) # oo
+                        else:                         label['Bc'].append(State(J, Ka, Kc, M, iso)) # oe (Ka%2 != 0 and Kc%2 == 0)
                 # get block diagonal hamiltonian (make sure you calculate this in 'V'!)
                 if 0 == J:
-                    blocks = {'Ep': num.zeros((1, 1), num.float64)}
+                    blocks = {'A': num.zeros((1, 1), num.float64)}
                 else:
-                    blocks = self.__full_hamiltonian(J, J, None, None, 'V')
+                    blocks = self.__full_hamiltonian(J, J, None, None, 'V')  # change symmetry-labels in __full_hamiltonian! <<<---------
                 # store sorted eigenenergies for respective J and block
                 for sym in blocks.keys():
-                    if 0 == J%2: # J even
-                        fullsym = 'e' + sym
-                    else: # J odd
-                        fullsym = 'o' + sym
                     if 0 < blocks[sym].size:
-                        eigenvalues[fullsym] += num.sort(num.linalg.eigvalsh(num.array(blocks[sym]))).tolist()
+                        eigenvalues[sym] += num.sort(num.linalg.eigvalsh(num.array(blocks[sym]))).tolist()
             # sort assignments according to energy
             if 'V' == self.__symmetry:
-                symmetries = ['Ep', 'Em', 'Op', 'Om']
-                eigenvalues['Ep'] = eigenvalues['eEp'] + eigenvalues['oEp']
-                eigenvalues['Em'] = eigenvalues['eEm'] + eigenvalues['oEm']
-                eigenvalues['Op'] = eigenvalues['eOp'] + eigenvalues['oOp']
-                eigenvalues['Om'] = eigenvalues['eOm'] + eigenvalues['oOm']
-                label['Ep'] = label['eEp'] + label['oEp']
-                label['Em'] = label['eEm'] + label['oEm']
-                label['Op'] = label['eOp'] + label['oOp']
-                label['Om'] = label['eOm'] + label['oOm']
+                symmetries = ['A', 'Ba', 'Bb', 'Bc']
             elif 'C2a' == self.__symmetry:
-                symmetries = ['E', 'O']
-                eigenvalues['E'] = eigenvalues['eEp'] + eigenvalues['eEm'] + eigenvalues['oEp'] + eigenvalues['oEm']
-                eigenvalues['O'] = eigenvalues['eOp'] + eigenvalues['eOm'] + eigenvalues['oOp'] + eigenvalues['oOm']
-                label['E'] = label['eEp'] + label['eEm'] + label['oEp'] + label['oEm']
-                label['O'] = label['eOp'] + label['eOm'] + label['oOp'] + label['oOm']
+                eigenvalues['Aa'] = eigenvalues['A'] + eigenvalues['Ba']
+                eigenvalues['bc'] = eigenvalues['Bb'] + eigenvalues['Bc']
+                label['Aa'] = label['A'] + label['Ba']
+                label['bc'] = label['Bb'] + label['Bc']
+                symmetries = ['Aa', 'bc']
             elif 'C2b' == self.__symmetry:
+                eigenvalues['Ab'] = eigenvalues['A'] + eigenvalues['Bb']
+                eigenvalues['ac'] = eigenvalues['Bb'] + eigenvalues['Bc']
+                label['Ab'] = label['A'] + label['Ba']
+                label['ac'] = label['Bb'] + label['Bc']
                 symmetries = ['Ab', 'ac']
-                eigenvalues['Ab'] = eigenvalues['eEp'] + eigenvalues['eOm'] + eigenvalues['oEm'] + eigenvalues['oOp']
-                eigenvalues['ac'] = eigenvalues['eEm'] + eigenvalues['eOp'] + eigenvalues['oEp'] + eigenvalues['oOm']
-                label['Ab'] = label['eEp'] + label['eOm'] + label['oEm'] + label['oOp']
-                label['ac'] = label['eEm'] + label['eOp'] + label['oEp'] + label['oOm']
             elif 'C2c' == self.__symmetry:
+                eigenvalues['Ac'] = eigenvalues['A'] + eigenvalues['Bc']
+                eigenvalues['ab'] = eigenvalues['Ba'] + eigenvalues['Bb']
+                label['Ac'] = label['A'] + label['Bc']
+                label['ab'] = label['Bb'] + label['Bb']
                 symmetries = ['Ac', 'ab']
-                eigenvalues['Ac'] = eigenvalues['eEp'] + eigenvalues['eOp'] + eigenvalues['oEm'] + eigenvalues['oOm']
-                eigenvalues['ab'] = eigenvalues['eEm'] + eigenvalues['eOm'] + eigenvalues['oEp'] + eigenvalues['oOp']
-                label['Ac'] = label['eEp'] + label['eOp'] + label['oEm'] + label['oOm']
-                label['ab'] = label['eEm'] + label['eOm'] + label['oEp'] + label['oOp']
             elif 'N' == self.__symmetry:
-                symmetries = ['N']
-                for sym in ['eEp', 'eEm', 'eOp', 'eOm', 'oEp', 'oEm', 'oOp', 'oOm']:
+                for sym in symmetries:
                     eigenvalues['N'] += eigenvalues[sym]
                     label['N'] += label[sym]
+                symmetries = ['N']
             else:
                 raise NotImplementedError("Hamiltonian symmetry %s not implemented" % (self.__symmetry, ))
-            del eigenvalues['eEp'], eigenvalues['eEm'], eigenvalues['eOp'], eigenvalues['eOm'], \
-                eigenvalues['oEp'], eigenvalues['oEm'], eigenvalues['oOp'], eigenvalues['oOm']
-            del label['eEp'], label['eEm'], label['eOp'], label['eOm'], label['oEp'], label['oEm'], label['oOp'], label['oOm']
+            if 'V' != self.__symmetry:
+                # free unused memories
+                del eigenvalues['A'], eigenvalues['Ba'], eigenvalues['Bb'], eigenvalues['Bc']
+                del label['A'], label['Ba'], label['Bb'], label['Bc']
             for sym in symmetries:
                 idx = num.argsort(eigenvalues[sym])
                 self.__stateorder_dict[sym] = num.array(label[sym])[idx]
@@ -399,18 +375,24 @@ class AsymmetricRotor:
             blocks['N'] = hmat
         elif symmetry == 'V':
             # full Fourgroup symmetry (only field free Hamiltonian)
-            # I^r representation, Wang transformed Hamiltonian factorizes into four submatrices E-, E+, O-, O+
+            # I^r representation, Wang transformed Hamiltonian factorizes into four submatrices E-, E+, O-, O+,
+            # or, as used here, A, Ba, Bb, Bc
             if Jmin != Jmax:
                 raise NotImplementedError("Hamiltonian consists of more than one J-block. Is this field free ?")
             J = Jmax
             if J == 0:
                 # return the single value in the transformed Hamiltonian
-                blocks['Ep'] = num.array(hmat[0,0])
-            else:
-                blocks['Ep'] = hmat[J:2*(J//2+1)+J:2, J:2*(J//2+1)+J:2]
-                blocks['Em'] = hmat[J%2:2*(J//2)+J%2:2, J%2:2*(J//2)+J%2:2]
-                blocks['Op'] = hmat[J+1:2*(J//2+J%2)+J+1:2, J+1:2*(J//2+J%2)+J+1:2]
-                blocks['Om'] = hmat[1-J%2:2*(J//2+J%2)+1-J%2:2, 1-J%2:2*(J//2+J%2)+1-J%2:2]
+                blocks['A'] = num.array(hmat[0,0])
+            elif 0 == J % 2: # J even
+                blocks['A']  = hmat[J:2*(J//2+1)+J:2, J:2*(J//2+1)+J:2]
+                blocks['Ba'] = hmat[J%2:2*(J//2)+J%2:2, J%2:2*(J//2)+J%2:2]
+                blocks['Bb'] = hmat[1-J%2:2*(J//2+J%2)+1-J%2:2, 1-J%2:2*(J//2+J%2)+1-J%2:2]
+                blocks['Bc'] = hmat[J+1:2*(J//2+J%2)+J+1:2, J+1:2*(J//2+J%2)+J+1:2]
+            else: # J odd
+                blocks['A']  = hmat[J%2:2*(J//2)+J%2:2, J%2:2*(J//2)+J%2:2]
+                blocks['Ba'] = hmat[J:2*(J//2+1)+J:2, J:2*(J//2+1)+J:2]
+                blocks['Bb'] = hmat[J+1:2*(J//2+J%2)+J+1:2, J+1:2*(J//2+J%2)+J+1:2]
+                blocks['Bc'] = hmat[1-J%2:2*(J//2+J%2)+1-J%2:2, 1-J%2:2*(J//2+J%2)+1-J%2:2]
         elif symmetry == 'C2a':
             # C2 rotation about a-axis is symmetry element
             #
@@ -419,11 +401,11 @@ class AsymmetricRotor:
             # In this case E and O corresponds to columns with Ka even and odd, respectively.
             matrixsize_full = ((Jmax + 1) * Jmax + Jmax + 1) - (Jmin *(Jmin-1) + Jmin)
             if 0 == Jmin%2: # start with even J block
-                blocks['E'] = hmat[0:matrixsize_full:2, 0:matrixsize_full:2]
-                blocks['O'] = hmat[1:matrixsize_full:2, 1:matrixsize_full:2]
+                blocks['Aa'] = hmat[0:matrixsize_full:2, 0:matrixsize_full:2]
+                blocks['bc'] = hmat[1:matrixsize_full:2, 1:matrixsize_full:2]
             else: # start with odd J block
-                blocks['E'] = hmat[1:matrixsize_full:2, 1:matrixsize_full:2]
-                blocks['O'] = hmat[0:matrixsize_full:2, 0:matrixsize_full:2]
+                blocks['Aa'] = hmat[1:matrixsize_full:2, 1:matrixsize_full:2]
+                blocks['bc'] = hmat[0:matrixsize_full:2, 0:matrixsize_full:2]
             for key in blocks:
                 print "Wang-transformed block:", key
                 block = blocks[key]
