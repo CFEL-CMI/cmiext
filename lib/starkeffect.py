@@ -278,34 +278,34 @@ class AsymmetricRotor:
             self.__stateorder_dict = {}
             M = self.__M
             iso = self.__isomer
-            eigenvalues = {'Ep': [], 'Em': [], 'Op': [], 'Om': []}
-            label = {'Ep': [], 'Em': [], 'Op': [], 'Om': []}
+            eigenvalues = {'eEp': [], 'eEm': [], 'eOp': [], 'eOm': [], 'oEp': [], 'oEm': [], 'oOp': [], 'oOm': []}
+            label = {'eEp': [], 'eEm': [], 'eOp': [], 'eOm': [], 'oEp': [], 'oEm': [], 'oOp': [], 'oOm': []}
             for J in range(M, self.__Jmax+1):
                 Ka = 0
                 if 0 == J%2: # J even
                     for Kc in range(J,-1,-1):
-                        if Ka%2 == 0 and Kc%2 == 0:  label['Ep'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 == 0 and Kc%2 !=0: label['Em'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 != 0 and Kc%2 ==0: label['Op'].append(State(J, Ka, Kc, M, iso))
-                        else:                        label['Om'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                        if Ka%2 == 0 and Kc%2 == 0:  label['eEp'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 == 0 and Kc%2 !=0: label['eEm'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 != 0 and Kc%2 ==0: label['eOp'].append(State(J, Ka, Kc, M, iso))
+                        else:                        label['eOm'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
                         if Kc > 0:
                             Ka = Ka+1
-                            if Ka%2 == 0 and Kc%2 == 0:   label['Ep'].append(State(J, Ka, Kc, M, iso))
-                            elif Ka%2 == 0 and Kc%2 != 0: label['Em'].append(State(J, Ka, Kc, M, iso))
-                            elif Ka%2 != 0 and Kc%2 == 0: label['Op'].append(State(J, Ka, Kc, M, iso))
-                            else:                         label['Om'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                            if Ka%2 == 0 and Kc%2 == 0:   label['eEp'].append(State(J, Ka, Kc, M, iso))
+                            elif Ka%2 == 0 and Kc%2 != 0: label['eEm'].append(State(J, Ka, Kc, M, iso))
+                            elif Ka%2 != 0 and Kc%2 == 0: label['eOp'].append(State(J, Ka, Kc, M, iso))
+                            else:                         label['eOm'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
                 else: # J odd
                     for Kc in range(J,-1,-1):
-                        if Ka%2 ==0 and Kc%2 == 0:   label['Em'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 ==0 and Kc%2 != 0: label['Ep'].append(State(J, Ka, Kc, M, iso))
-                        elif Ka%2 !=0 and Kc%2 == 0: label['Om'].append(State(J, Ka, Kc, M, iso))
-                        else:                        label['Op'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                        if Ka%2 ==0 and Kc%2 == 0:   label['oEm'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 ==0 and Kc%2 != 0: label['oEp'].append(State(J, Ka, Kc, M, iso))
+                        elif Ka%2 !=0 and Kc%2 == 0: label['oOm'].append(State(J, Ka, Kc, M, iso))
+                        else:                        label['oOp'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
                         if Kc > 0:
                             Ka = Ka+1
-                            if ((Ka%2==0) and  (Kc%2==0)):   label['Em'].append(State(J, Ka, Kc, M, iso))
-                            elif ((Ka%2==0) and  (Kc%2!=0)): label['Ep'].append(State(J, Ka, Kc, M, iso))
-                            elif ((Ka%2!=0) and  (Kc%2==0)): label['Om'].append(State(J, Ka, Kc, M, iso))
-                            else:                            label['Op'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
+                            if ((Ka%2==0) and  (Kc%2==0)):   label['oEm'].append(State(J, Ka, Kc, M, iso))
+                            elif ((Ka%2==0) and  (Kc%2!=0)): label['oEp'].append(State(J, Ka, Kc, M, iso))
+                            elif ((Ka%2!=0) and  (Kc%2==0)): label['oOm'].append(State(J, Ka, Kc, M, iso))
+                            else:                            label['oOp'].append(State(J, Ka, Kc, M, iso)) # Ka%2 != 0 and Kc%2 != 0
                 # get block diagonal hamiltonian (make sure you calculate this in 'V'!)
                 if 0 == J:
                     blocks = {'Ep': num.zeros((1, 1), num.float64)}
@@ -313,33 +313,51 @@ class AsymmetricRotor:
                     blocks = self.__full_hamiltonian(J, J, None, None, 'V')
                 # store sorted eigenenergies for respective J and block
                 for sym in blocks.keys():
+                    if 0 == J%2: # J even
+                        fullsym = 'e' + sym
+                    else: # J odd
+                        fullsym = 'o' + sym
                     if 0 < blocks[sym].size:
-                        eigenvalues[sym] += num.sort(num.linalg.eigvalsh(num.array(blocks[sym]))).tolist()
+                        eigenvalues[fullsym] += num.sort(num.linalg.eigvalsh(num.array(blocks[sym]))).tolist()
             # sort assignments according to energy
             if 'V' == self.__symmetry:
                 symmetries = ['Ep', 'Em', 'Op', 'Om']
+                eigenvalues['Ep'] = eigenvalues['eEp'] + eigenvalues['oEp']
+                eigenvalues['Em'] = eigenvalues['eEm'] + eigenvalues['oEm']
+                eigenvalues['Op'] = eigenvalues['eOp'] + eigenvalues['oOp']
+                eigenvalues['Om'] = eigenvalues['eOm'] + eigenvalues['oOm']
+                label['Ep'] = label['eEp'] + label['oEp']
+                label['Em'] = label['eEm'] + label['oEm']
+                label['Op'] = label['eOp'] + label['oOp']
+                label['Om'] = label['eOm'] + label['oOm']
             elif 'C2a' == self.__symmetry:
                 symmetries = ['E', 'O']
-                eigenvalues['E'] = eigenvalues['Ep'] + eigenvalues['Em']
-                eigenvalues['O'] = eigenvalues['Op'] + eigenvalues['Om']
-                label['E'] = label['Ep'] + label['Em']
-                label['O'] = label['Op'] + label['Om']
-                del eigenvalues['Ep'], eigenvalues['Em'], eigenvalues['Op'], eigenvalues['Om']
-                del label['Ep'], label['Em'], label['Op'], label['Om']
+                eigenvalues['E'] = eigenvalues['eEp'] + eigenvalues['eEm'] + eigenvalues['oEp'] + eigenvalues['oEm']
+                eigenvalues['O'] = eigenvalues['eOp'] + eigenvalues['eOm'] + eigenvalues['oOp'] + eigenvalues['oOm']
+                label['E'] = label['eEp'] + label['eEm'] + label['oEp'] + label['oEm']
+                label['O'] = label['eOp'] + label['eOm'] + label['oOp'] + label['oOm']
             elif 'C2b' == self.__symmetry:
                 symmetries = ['Ab', 'ac']
-                raise NotImplementedError
+                eigenvalues['Ab'] = eigenvalues['eEp'] + eigenvalues['eOm'] + eigenvalues['oEm'] + eigenvalues['oOp']
+                eigenvalues['ac'] = eigenvalues['eEm'] + eigenvalues['eOp'] + eigenvalues['oEp'] + eigenvalues['oOm']
+                label['Ab'] = label['eEp'] + label['eOm'] + label['oEm'] + label['oOp']
+                label['ac'] = label['eEm'] + label['eOp'] + label['oEp'] + label['oOm']
             elif 'C2c' == self.__symmetry:
                 symmetries = ['Ac', 'ab']
-                raise NotImplementedError
+                eigenvalues['Ac'] = eigenvalues['eEp'] + eigenvalues['eOp'] + eigenvalues['oEm'] + eigenvalues['oOm']
+                eigenvalues['ab'] = eigenvalues['eEm'] + eigenvalues['eOm'] + eigenvalues['oEp'] + eigenvalues['oOp']
+                label['Ac'] = label['eEp'] + label['eOp'] + label['oEm'] + label['oOm']
+                label['ab'] = label['eEm'] + label['eOm'] + label['oEp'] + label['oOp']
             elif 'N' == self.__symmetry:
                 symmetries = ['N']
-                eigenvalues['N'] = eigenvalues['Ep'] + eigenvalues['Em'] + eigenvalues['Op'] + eigenvalues['Om']
-                label['N'] = label['Ep'] + label['Em'] + label['Op'] + label['Om']
-                del eigenvalues['Ep'], eigenvalues['Em'], eigenvalues['Op'], eigenvalues['Om']
-                del label['Ep'], label['Em'], label['Op'], label['Om']
+                for sym in ['eEp', 'eEm', 'eOp', 'eOm', 'oEp', 'oEm', 'oOp', 'oOm']:
+                    eigenvalues['N'] += eigenvalues[sym]
+                    label['N'] += label[sym]
             else:
                 raise NotImplementedError("Hamiltonian symmetry %s not implemented" % (self.__symmetry, ))
+            del eigenvalues['eEp'], eigenvalues['eEm'], eigenvalues['eOp'], eigenvalues['eOm'], \
+                eigenvalues['oEp'], eigenvalues['oEm'], eigenvalues['oOp'], eigenvalues['oOm']
+            del label['eEp'], label['eEm'], label['eOp'], label['eOm'], label['oEp'], label['oEm'], label['oOp'], label['oOm']
             for sym in symmetries:
                 idx = num.argsort(eigenvalues[sym])
                 self.__stateorder_dict[sym] = num.array(label[sym])[idx]
@@ -350,6 +368,11 @@ class AsymmetricRotor:
     def __wang(self, hmat, symmetry, Jmin, Jmax):
         """Wang transform matrix and return a dictionary with the individual (sub)matrices."""
         blocks = {}
+        print "Full Hamiltonian:"
+        for i in range(hmat.shape[0]):
+            for j in range(hmat.shape[0]):
+                print "%10.3g" % (abs(hmat[i,j]),),
+            print("\n")
         # set up Wang matrix
         Wmat = num.zeros(hmat.shape, num.float64)
         value = 1/num.sqrt(2.)
@@ -363,6 +386,11 @@ class AsymmetricRotor:
         # transform Hamiltonian matrix
         dot = lambda a, b: scipy.linalg.fblas.dgemm(1., a, b)
         hmat = dot(dot(Wmat, hmat), Wmat)
+        print "Wang-transformed Hamiltonian:"
+        for i in range(hmat.shape[0]):
+            for j in range(hmat.shape[0]):
+                print "%10.3g" % (abs(hmat[i,j]), ),
+            print("\n")
         # delete Wang matrix (it's not used anymore)
         del Wmat
         # sort out matrix blocks
@@ -389,26 +417,76 @@ class AsymmetricRotor:
             # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices E (contains E+ and E-)
             # and O (contains O+ and O-).
             # In this case E and O corresponds to columns with Ka even and odd, respectively.
-            matrixsize_Jmin = Jmin *(Jmin-1) + Jmin
-            matrixsize_full = (Jmax + 1) * Jmax + Jmax + 1 - matrixsize_Jmin
+            matrixsize_full = ((Jmax + 1) * Jmax + Jmax + 1) - (Jmin *(Jmin-1) + Jmin)
             if 0 == Jmin%2: # start with even J block
                 blocks['E'] = hmat[0:matrixsize_full:2, 0:matrixsize_full:2]
                 blocks['O'] = hmat[1:matrixsize_full:2, 1:matrixsize_full:2]
             else: # start with odd J block
                 blocks['E'] = hmat[1:matrixsize_full:2, 1:matrixsize_full:2]
                 blocks['O'] = hmat[0:matrixsize_full:2, 0:matrixsize_full:2]
+            for key in blocks:
+                print "Wang-transformed block:", key
+                block = blocks[key]
+                for i in range(block.shape[0]):
+                    for j in range(block.shape[1]):
+                        print "%10.3g" % (abs(block[i,j]),),
+                    print("\n")
         elif symmetry == 'C2b': # C2 rotation about b-axis is symmetry element
-            raise NotImplementedError("Hamiltonian symmetry 'C2b' not implemented yet")
             # C2 rotation about b-axis is symmetry element
             #
             # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices 'Ab' (contains ee and oo)
             # and 'ac' (contains eo and oe).
+            matrixsize_full = ((Jmax + 1) * Jmax + Jmax + 1) - (Jmin *(Jmin-1) + Jmin)
+            idx = {}
+            idx['Ab'] = []
+            idx['ac'] = []
+            n = 2
+            n_incr = 4
+            b = 'Ab'
+            for i in range(matrixsize_full):
+                if i >= n - Jmin:
+                    n += n_incr
+                    n_incr += 2
+                    if 'Ab' == b: b = 'ac'
+                    else: b = 'Ab'
+                idx[b].append(i)
+            blocks['Ab'] = hmat[num.ix_(idx['Ab'], idx['Ab'])]
+            blocks['ac'] = hmat[num.ix_(idx['ac'], idx['ac'])]
+            for key in blocks:
+                print "Wang-transformed block:", key
+                block = blocks[key]
+                for i in range(block.shape[0]):
+                    for j in range(block.shape[1]):
+                        print "%10.3g" % (block[i,j],),
+                    print("\n")
         elif symmetry == 'C2c':
             # C2 rotation about c-axis is symmetry element
             #
             # I^r representation, Wang transformed Hamiltonian factorizes into two submatrices 'Ac' (contains ee and oe)
             # and 'ab' (contains eo and oo).
-            raise NotImplementedError("Hamiltonian symmetry 'C2c' not implemented yet")
+            matrixsize_full = ((Jmax + 1) * Jmax + Jmax + 1) - (Jmin *(Jmin-1) + Jmin)
+            idx = {}
+            idx['Ac'] = []
+            idx['ab'] = []
+            n = 2
+            n_incr = 4
+            b = 'Ac'
+            for i in range(matrixsize_full):
+                if i >= n - Jmin:
+                    n += n_incr
+                    n_incr += 2
+                    if 'Ac' == b: b = 'ab'
+                    else: b = 'Ac'
+                idx[b].append(i)
+            blocks['Ac'] = hmat[num.ix_(idx['Ac'], idx['Ac'])]
+            blocks['ab'] = hmat[num.ix_(idx['ab'], idx['ab'])]
+            for key in blocks:
+                print "Wang-transformed block:", key
+                block = blocks[key]
+                for i in range(block.shape[0]):
+                    for j in range(block.shape[1]):
+                        print "%10.3g" % (abs(block[i,j]),),
+                    print("\n")
         else:
             # something went wrong
             raise SyntaxError("unknown Hamiltonian symmetry")
@@ -441,19 +519,20 @@ class AsymmetricRotor:
 if __name__ == "__main__":
     print
     p = CalculationParameter
-    p.Jmax_calc = 10
+    p.Jmax_calc =  3
     p.Jmax_save =  2
     p.M = [0, 1]
     p.rotcon = jkext.convert.Hz2J(num.array([5e9, 2e9, 1.5e9]))
-    p.quartic = jkext.convert.Hz2J([1e3, 1e3, 1e3, 1e3, 1e3])
-    p.watson = 'A'
-    p.dipole = jkext.convert.D2Cm([1., 1., 1.])
-    top = AsymmetricRotor(p, 0, 0., 0.)
+    #p.quartic = jkext.convert.Hz2J([1e3, 1e3, 1e3, 1e3, 1e3])
+    #p.watson = 'A'
+    p.dipole = jkext.convert.D2Cm([1.0, .0, .0])
+    p.symmetry = 'C2a'
+    top = AsymmetricRotor(p, p.M[0], 0., 0.)
     for state in [State(0, 0, 0, 0, 0),
                   State(1, 0, 1, 0, 0), State(1, 1, 1, 0, 0), State(1, 1, 0, 0, 0),
                   State(2, 1, 2, 0, 0)]:
         print state.name(), "%10.3f" % (jkext.convert.J2Hz(top.energy(state)) / 1e6,)
-    top = AsymmetricRotor(p, 0, 0., jkext.convert.kV_cm2V_m(100.))
+    top = AsymmetricRotor(p, p.M[0], 0., jkext.convert.kV_cm2V_m(100.))
     for state in [State(0, 0, 0, 0, 0),
                   State(1, 0, 1, 0, 0), State(1, 1, 1, 0, 0), State(1, 1, 0, 0, 0),
                   State(2, 1, 2, 0, 0)]:
