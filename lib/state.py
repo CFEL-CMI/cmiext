@@ -71,7 +71,6 @@ class State:
         qn = num.array(hdfname.split('/'))
         J, Ka, Kc, M, iso = qn.tolist()
         self.__initialize(num.uint64(J[1:]), num.uint64(Ka[1:]), num.uint64(Kc[1:]), num.uint64(M[1:]), num.uint64(iso[1:]))
-        # print J, Ka, Kc, M, iso, "-->", self.__labels
         return self
 
     def id(self):
@@ -86,7 +85,6 @@ class State:
         Prepend '_' to all numbers to make them valid Python identifiers. We split the individual quantum numbers by '/'
         in order to provide subgrouping for faster transversal of the HDF5 directory.
         """
-        # print "hdfname:", self.__labels, ":", "_%d/_%d/_%d/_%d/_%d" % self.totuple()
         return "_%d/_%d/_%d/_%d/_%d" % self.totuple()
 
     def toarray(self):
