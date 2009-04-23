@@ -25,15 +25,15 @@ class State:
     """State label of molecule (currently only asymmetric top notation)
 
     Public data:
-    - max  Upper bound of any individual quantum number
+    - max  Upper bound of any individual quantum number - actually any qn must be strictly smaller than max
     """
 
     def __init__(self, J=0, Ka=0, Kc=0, M=0, isomer=0):
-        self.max = 999
+        self.max = 1000
         self.__initialize(J, Ka, Kc, M, isomer)
 
     def __initialize(self, J=0, Ka=0, Kc=0, M=0, isomer=0):
-        assert (J <= self.max) and (Ka <= self.max) and (Kc <= self.max) and (M <= self.max) and (isomer <= self.max)
+        assert (J < self.max) and (Ka < self.max) and (Kc < self.max) and (M < self.max) and (isomer < self.max)
         self.__labels = num.array([J, Ka, Kc, M, isomer], dtype=num.uint64)
         self.__id = num.uint64(0)
         for i in range(self.__labels.size):
