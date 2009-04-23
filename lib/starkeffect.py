@@ -386,13 +386,13 @@ class AsymmetricRotor:
             elif 0 == J % 2: # J even
                 blocks['A']  = hmat[J:2*(J//2+1)+J:2, J:2*(J//2+1)+J:2]
                 blocks['Ba'] = hmat[J%2:2*(J//2)+J%2:2, J%2:2*(J//2)+J%2:2]
-                blocks['Bb'] = hmat[1-J%2:2*(J//2+J%2)+1-J%2:2, 1-J%2:2*(J//2+J%2)+1-J%2:2]
-                blocks['Bc'] = hmat[J+1:2*(J//2+J%2)+J+1:2, J+1:2*(J//2+J%2)+J+1:2]
+                blocks['Bb'] = hmat[J+1:2*(J//2+J%2)+J+1:2, J+1:2*(J//2+J%2)+J+1:2]
+                blocks['Bc'] = hmat[1-J%2:2*(J//2+J%2)+1-J%2:2, 1-J%2:2*(J//2+J%2)+1-J%2:2]
             else: # J odd
                 blocks['A']  = hmat[J%2:2*(J//2)+J%2:2, J%2:2*(J//2)+J%2:2]
                 blocks['Ba'] = hmat[J:2*(J//2+1)+J:2, J:2*(J//2+1)+J:2]
-                blocks['Bb'] = hmat[J+1:2*(J//2+J%2)+J+1:2, J+1:2*(J//2+J%2)+J+1:2]
-                blocks['Bc'] = hmat[1-J%2:2*(J//2+J%2)+1-J%2:2, 1-J%2:2*(J//2+J%2)+1-J%2:2]
+                blocks['Bb'] = hmat[1-J%2:2*(J//2+J%2)+1-J%2:2, 1-J%2:2*(J//2+J%2)+1-J%2:2]
+                blocks['Bc'] = hmat[J+1:2*(J//2+J%2)+J+1:2, J+1:2*(J//2+J%2)+J+1:2]
         elif symmetry == 'C2a':
             # C2 rotation about a-axis is symmetry element
             #
@@ -512,7 +512,7 @@ if __name__ == "__main__":
     top = AsymmetricRotor(p, p.M[0], 0., 0.)
     for state in [State(0, 0, 0, 0, 0),
                   State(1, 0, 1, 0, 0), State(1, 1, 1, 0, 0), State(1, 1, 0, 0, 0),
-                  State(2, 1, 2, 0, 0)]:
+                  State(2, 0, 2, 0, 0), State(2, 1, 2, 0, 0), State(2, 1, 1, 0, 0), State(2, 2, 1, 0, 0), State(2, 2, 0, 0, 0)]:
         print state.name(), "%10.3f" % (jkext.convert.J2Hz(top.energy(state)) / 1e6,)
     top = AsymmetricRotor(p, p.M[0], 0., jkext.convert.kV_cm2V_m(100.))
     for state in [State(0, 0, 0, 0, 0),
