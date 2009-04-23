@@ -53,4 +53,4 @@ def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float6
         pass
     array = file.createVLArray(group, leafname, atom, comment, filters)
     array.append(data)
-    group.flush()
+    array.flush()
