@@ -50,7 +50,8 @@ def main(args):
     try:
         opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax_calc=", "Jmax_save=", "Mmax=",
                                                    "dc-fields=",
-                                                   "2,6-difluoro-iodobenzene", "benzonitrile", "iodobenzene", ])
+                                                   "2,6-difluoro-iodobenzene", "benzonitrile", "iodobenzene",
+                                                   "water", "H2O", "D2O"])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -105,6 +106,26 @@ def main(args):
             param.quartic = convert.Hz2J(num.array([19.5479, 164.648, 891, 2.53098, 15554]))
             # param.sextic =  convert.Hz2J(num.array([0.0609, -0.377])) # ignored sextic constants!
             param.dipole = convert.D2Cm(num.array([1.6250, 0., 0.]))
+        elif o in ("--D2O", "--H2O", "--HDO", "--water"):
+            # rotational constans from Herzberg
+            # dipole moments from Clough, Beers, Klein, Rothman, J. Chem. Phys. 59, 2254-2259 (1973)
+            name = "water"
+            param.watson = 'A'
+            if o in ("--H2O", "--water"):
+                param.isomer = 0
+                param.symmetry = 'C2b'
+                param.rotcon = convert.invcm2J(num.array([27.79, 14.50, 9.96]))
+                param.dipole = convert.D2Cm(num.array([0., -1.8546, 0.]))
+            elif o == "--D2O":
+                param.isomer = 1
+                param.symmetry = 'C2b'
+                param.rotcon = convert.invcm2J(num.array([15.39, 7.26, 4.85]))
+                param.dipole = convert.D2Cm(num.array([0., -1.8558, 0.]))
+            elif o == "--HDO":
+                param.isomer = 2
+                param.symmetry = 'N'
+                param.rotcon = convert.invcm2J(num.array([23.48, 9.13, 6.40]))
+                param.dipole = convert.D2Cm(num.array([-0.6567, -1.7318, 0.]))
         else:
             assert False, "unhandled commandline option"
 
