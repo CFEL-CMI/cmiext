@@ -39,13 +39,29 @@ def Hz2J(val):
     return numpy.array(val) * const.plancks_constant_h
 
 
+def MHz2J(val):
+    """Mega-Hertz -> Joule"""
+    return Hz2J(val * 1e6)
+
+
+def invcm2J(val):
+    """cm^{-1} -> Joule"""
+    return val * 100 * const.plancks_constant_h * const.speed_of_light
+
+
 def J2Hz(val):
     """Joule -> Hertz"""
     return numpy.array(val) / const.plancks_constant_h
 
+
 def J2MHz(val):
-    """Joule -> Hertz"""
+    """Joule -> Mega-Hertz"""
     return J2Hz(val) / 1e6
+
+
+def J2invcm(val):
+    """Joule -> cm^{-1}"""
+    return val / const.plancks_constant_h / const.speed_of_light / 100
 
 
 def V_m2kV_cm(val):
