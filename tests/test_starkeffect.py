@@ -15,13 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
-#
-# some SGE commands for batch usage convenience
-#$ -cwd
-#$ -e $JOB_NAME.sge
-#$ -o $JOB_NAME.sge
-#$ -S $HOME/.python/bin/python
-#$ -V
+
 from __future__ import division
 
 """Unit-tests of Stark effect calculations
