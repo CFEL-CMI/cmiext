@@ -48,10 +48,8 @@ class CalculationParameter:
     - 'S' for Watson's S reduction
 
     |symmetry| defines the remaining symmetry of Hamiltonian for the molecule in a DC field. This is used to disentangle
-    the block-diagonalization from a Wang transformation of the Hamiltonina matrix.
-
-    It can be None, 'a', 'b', 'c', or 'V' for full Fourgroup symmetry. The latter can only be correct for zero-field
-    calculations.
+    the block-diagonalization from a Wang transformation of the Hamiltonian matrix. It can be 'N', 'C2a', 'C2b', 'C2c',
+    or 'V' for full Fourgroup symmetry. The latter can only be correct for zero-field calculations.
     """
     type = 'A'
     M = range(0, 2)
@@ -108,7 +106,7 @@ class AsymmetricRotor:
         self.__dipole_components = [self.__tiny < abs(self.__dipole[0]),
                                     self.__tiny < abs(self.__dipole[1]),
                                     self.__tiny < abs(self.__dipole[2])]
-        if True == self.__dipole_components[1]: # µ_c != 0 -- the Hamiltonian matrix is complex (and hermitean)
+        if True == self.__dipole_components[2]: # µ_c != 0 -- the Hamiltonian matrix is complex (and hermitean)
             self.__complex = True
             self.__hmat_type = num.complex128
         else: # µ_c == 0 --  the Hamiltonian matrix is real (and symmetric)
@@ -174,7 +172,7 @@ class AsymmetricRotor:
 
     def __full_hamiltonian(self, Jmin, Jmax, acfield, dcfield, symmetry):
         """Return block-diagonalized Hamiltonian matrix (blocks)"""
-        self.__Jmin_matrixsize = Jmin *(Jmin-1) + Jmin
+        self.__Jmin_matrixsize = Jmin *(Jmin-1) + Jmin # this is used by __index
         matrixsize = (Jmax + 1) * Jmax + Jmax + 1 - self.__Jmin_matrixsize
         # create hamiltonian matrix
         hmat = num.zeros((matrixsize, matrixsize), self.__hmat_type)
@@ -314,9 +312,6 @@ class AsymmetricRotor:
                 for sym in blocks.keys():
                     if 0 < blocks[sym].size:
                         eigenvalues[sym] += num.sort(num.linalg.eigvalsh(num.array(blocks[sym]))).tolist()
-#                 for sym in ['A', 'Ba', 'Bb', 'Bc']:
-#                     print "\n", sym, ":",
-#                     for l in label[sym]: print l.name(), ",",
             # sort assignments according to energy
             if 'V' == self.__symmetry:
                 symmetries = ['A', 'Ba', 'Bb', 'Bc']
@@ -326,10 +321,6 @@ class AsymmetricRotor:
                 label['Aa'] = label['A'] + label['Ba']
                 label['bc'] = label['Bb'] + label['Bc']
                 symmetries = ['Aa', 'bc']
-                for sym in ['A', 'Ba', 'Bb', 'Bc'] + symmetries:
-                    print "\n\n", sym, ":",
-                    for l in label[sym]: print l.name(), ",",
-                    print "\n", eigenvalues[sym]
             elif 'C2b' == self.__symmetry:
                 eigenvalues['Ab'] = eigenvalues['A'] + eigenvalues['Bb']
                 eigenvalues['ac'] = eigenvalues['Bb'] + eigenvalues['Bc']
@@ -340,7 +331,7 @@ class AsymmetricRotor:
                 eigenvalues['Ac'] = eigenvalues['A'] + eigenvalues['Bc']
                 eigenvalues['ab'] = eigenvalues['Ba'] + eigenvalues['Bb']
                 label['Ac'] = label['A'] + label['Bc']
-                label['ab'] = label['Bb'] + label['Bb']
+                label['ab'] = label['Ba'] + label['Bb']
                 symmetries = ['Ac', 'ab']
             elif 'N' == self.__symmetry:
                 eigenvalues['N'] = eigenvalues['A'] + eigenvalues['Ba'] + eigenvalues['Bb'] + eigenvalues['Bc']
@@ -362,12 +353,6 @@ class AsymmetricRotor:
         """Wang transform matrix and return a dictionary with the individual (sub)matrices."""
         matrixsize = ((Jmax + 1) * Jmax + Jmax + 1) - (Jmin *(Jmin-1) + Jmin)
         blocks = {}
-#         print "Original Hamiltonian:"
-#         for i in range(hmat.shape[0]):
-#             for j in range(hmat.shape[0]):
-#                 val = complex(hmat[i,j])
-#                 print "%9.2g;%8.2g" % (val.real, val.imag),
-#             print("\n")
         # set up Wang matrix
         Wmat = num.zeros(hmat.shape, self.__hmat_type)
         value = 1/num.sqrt(2.)
@@ -384,11 +369,6 @@ class AsymmetricRotor:
         else:
             dot = lambda a, b: scipy.linalg.fblas.dgemm(1., a, b)
         hmat = dot(dot(Wmat, hmat), Wmat)
-#         print "Wang-transformed Hamiltonian:"
-#         for i in range(hmat.shape[0]):
-#             for j in range(hmat.shape[0]):
-#                 print "%10.4g" % (abs(hmat[i,j]), ),
-#             print("\n")
         # delete Wang matrix (it's not used anymore)
         del Wmat
         # sort out matrix blocks
@@ -398,7 +378,7 @@ class AsymmetricRotor:
         elif symmetry == 'V':
             # full Fourgroup symmetry (field free Hamiltonian)
             # I^r representation, Wang transformed Hamiltonian factorizes into four submatrices E-, E+, O-, O+,
-            # or, as used here, A, Ba, Bb, Bc
+            # or, as used here, A, Ba, Bb, Bc -- in calculation for a single J this is the same.
             idx = {'A': [], 'Ba': [], 'Bb': [], 'Bc': []}
             i = 0
             for J in range(Jmin, Jmax+1):
@@ -418,7 +398,6 @@ class AsymmetricRotor:
                         if 0 == K % 2: order.append('Ba') # K even
                         else: order.append('Bc') # K odd
                 for j in range(2*J+1):
-#                     print i+j, order[j]
                     idx[order[j]].append(i+j)
                 i += 2*J+1
             for sym in order:
@@ -440,13 +419,6 @@ class AsymmetricRotor:
             for sym in order:
                 if 0 < len(idx[sym]):
                     blocks[sym] = hmat[num.ix_(idx[sym], idx[sym])]
-#             for key in blocks:
-#                 print "Wang-transformed block:", key
-#                 block = blocks[key]
-#                 for i in range(block.shape[0]):
-#                     for j in range(block.shape[1]):
-#                         print "%10.4g" % (block[i,j],),
-#                     print("\n")
         elif symmetry == 'C2b':
             # C2 rotation about b-axis is symmetry element
             #
@@ -467,20 +439,11 @@ class AsymmetricRotor:
                     for K in range(0, J+1): # K >= 0
                         order.append('ac')
                 for j in range(2*J+1):
-#                     print i+j, order[j]
                     idx[order[j]].append(i+j)
                 i += 2*J+1
             for sym in order:
-#                 print sym, idx[sym]
                 if 0 < len(idx[sym]):
                     blocks[sym] = hmat[num.ix_(idx[sym], idx[sym])]
-#             for key in blocks:
-#                 print "Wang-transformed block:", key
-#                 block = blocks[key]
-#                 for i in range(block.shape[0]):
-#                     for j in range(block.shape[1]):
-#                         print "%10.4g" % (abs(block[i,j]),),
-#                     print("\n")
         elif symmetry == 'C2c':
             # C2 rotation about c-axis is symmetry element
             #
@@ -490,25 +453,22 @@ class AsymmetricRotor:
             i = 0
             for J in range(Jmin, Jmax+1):
                 order = []
-                for K in range(-J, 0):
-                    if J % 2 == K % 2: order.append('ab') # J and K even or J and K odd
-                    else: order.append('Ac') # J odd and K even or J even and K odd
-                for K in range(0, J+1):
-                    if J % 2 != K % 2: order.append('ab') # J odd and K even or J even and K odd
-                    else: order.append('Ac') # J and K even or J and K odd
+                if 0 == J % 2: # J even
+                    for K in range(-J, 0): # K < 0
+                        order.append('ab')
+                    for K in range(0, J+1): # K >= 0
+                        order.append('Ac')
+                else: # J odd
+                    for K in range(-J, 1): # K < 0
+                        order.append('ab')
+                    for K in range(1, J+1): # K >= 0
+                        order.append('Ac')
                 for j in range(2*J+1):
                     idx[order[j]].append(i+j)
                 i += 2*J+1
             for sym in order:
                 if 0 < len(idx[sym]):
                     blocks[sym] = hmat[num.ix_(idx[sym], idx[sym])]
-            for key in blocks:
-                print "Wang-transformed block:", key
-                block = blocks[key]
-                for i in range(block.shape[0]):
-                    for j in range(block.shape[1]):
-                        print "%10.4g" % (block[i,j],),
-                    print("\n")
         else:
             # something went wrong
             raise SyntaxError("unknown Hamiltonian symmetry")
@@ -543,26 +503,15 @@ if __name__ == "__main__":
     p = CalculationParameter
     p.Jmax_calc =  8
     p.Jmax_save =  2
-    p.M = [0, 1]
-    # p.rotcon = num.array([5, 2, 1])
-    # p.rotcon = jkext.convert.Hz2J(num.array([5e9, 2e9, 1.4e9]))
-    # p.quartic = jkext.convert.Hz2J([1e3, 1e3, 1e3, 1e3, 1e3])
-    # p.watson = 'A'
-    # p.dipole = jkext.convert.D2Cm([.0, .0, .0])
-    # p.symmetry = 'N'
+    p.M = [0]
     p.isomer = 0
+    p.rotcon = jkext.convert.Hz2J(num.array([5e9, 2e9, 1.4e9]))
+    p.quartic = jkext.convert.Hz2J([1e3, 1e3, 1e3, 1e3, 1e3])
+    p.dipole = jkext.convert.D2Cm([.0, .0, 1.0])
+    p.watson = 'A'
     p.symmetry = 'N'
-#     # D2O
-#     p.rotcon = jkext.convert.invcm2J(num.array([15.39, 7.26, 4.85]))
-#     p.dipole = jkext.convert.D2Cm(num.array([0., -1.8558, 0.]))
-#     # HDO
-#     p.rotcon = jkext.convert.invcm2J(num.array([23.48, 9.13, 6.40]))
-#     p.dipole = jkext.convert.D2Cm(num.array([-0.6567, -1.7318, 0.]))
-#     # H2O
-#     p.rotcon = jkext.convert.invcm2J(num.array([27.79, 14.50, 9.96]))
-#     p.dipole = jkext.convert.D2Cm(num.array([0., -1.8546, 0.]))
     for M in p.M:
-        for field in jkext.convert.kV_cm2V_m((0., 200.)):
+        for field in jkext.convert.kV_cm2V_m((0., 1., 100.)):
             print "\nM = %d, field strength = %.0f kV/cm" % (M, jkext.convert.V_m2kV_cm(field))
             top = AsymmetricRotor(p, M, 0., field)
             for state in [State(0, 0, 0, M, p.isomer),
@@ -572,6 +521,6 @@ if __name__ == "__main__":
                           State(3, 0, 3, M, p.isomer), State(3, 1, 3, M, p.isomer), State(3, 1, 2, M, p.isomer),
                           State(3, 2, 2, M, p.isomer), State(3, 2, 1, M, p.isomer), State(3, 3, 1, M, p.isomer),
                           State(3, 3, 0, M, p.isomer)]:
-                if state.M() <= state.J() and state.J() <= p.Jmax_save and state.J() <= 1:
+                if state.M() <= state.J() and state.J() <= p.Jmax_save:
                     print state.name(), "%12.3f MHz %8.3f cm-1 %10.3g J" \
                         % (jkext.convert.J2MHz(top.energy(state)), jkext.convert.J2invcm(top.energy(state)), top.energy(state))
