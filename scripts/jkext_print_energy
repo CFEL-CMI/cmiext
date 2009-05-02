@@ -45,7 +45,8 @@ def usage():
 
 def main(args):
     try:
-        opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax="])
+        opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax=",
+                                                   "isomer="])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -54,6 +55,7 @@ def main(args):
     # default values
     Jmin = 0
     Jmax = 2
+    isomer = 0
     # scan commandline
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -63,6 +65,8 @@ def main(args):
             Jmin = int(a)
         elif o == "--Jmax":
             Jmax = int(a)
+        elif o == "--isomer":
+            isomer = int(a)
         else:
             assert False, "unhandled commandline option"
 
@@ -71,25 +75,26 @@ def main(args):
         # create Molecule object and specify storage file
         mol = molecule.Molecule(storage=name)
         # loop over state
-        for J in range(Jmin, Jmax+1):
-            Ka = 0
-            for Kc in range(J, -1, -1):
-                state = State(J, Ka, Kc, 0, 0)
-                fields, energies = mol.starkeffect(state)
-                fields, mueff = mol.mueff(state)
-                assert len(fields) == len(energies) and  len(fields) == len(mueff), "HDF5 storage file is corrupted"
-                print "# state:", state.name()
-                for i in range(len(fields)):
-                    print V_m2kV_cm(fields[i]), J2Hz(energies[i]) / 1e6, J2Hz(mueff[i] / V_m2kV_cm(1)) / 1e6
-                if Kc > 0:
-                    Ka += 1
-                    state = State(J, Ka, Kc, 0, 0)
+        for M in range(0, Jmax+1):
+            for J in range(max(Jmin, M), Jmax+1):
+                Ka = 0
+                for Kc in range(J, -1, -1):
+                    state = State(J, Ka, Kc, M, isomer)
                     fields, energies = mol.starkeffect(state)
                     fields, mueff = mol.mueff(state)
                     assert len(fields) == len(energies) and  len(fields) == len(mueff), "HDF5 storage file is corrupted"
                     print "# state:", state.name()
                     for i in range(len(fields)):
                         print V_m2kV_cm(fields[i]), J2Hz(energies[i]) / 1e6, J2Hz(mueff[i] / V_m2kV_cm(1)) / 1e6
+                    if Kc > 0:
+                        Ka += 1
+                        state = State(J, Ka, Kc, M, isomer)
+                        fields, energies = mol.starkeffect(state)
+                        fields, mueff = mol.mueff(state)
+                        assert len(fields) == len(energies) and  len(fields) == len(mueff), "HDF5 storage file is corrupted"
+                        print "# state:", state.name()
+                        for i in range(len(fields)):
+                            print V_m2kV_cm(fields[i]), J2Hz(energies[i]) / 1e6, J2Hz(mueff[i] / V_m2kV_cm(1)) / 1e6
 
 
 if __name__ == "__main__":
