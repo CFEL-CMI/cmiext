@@ -51,7 +51,7 @@ def main(args):
         opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax_calc=", "Jmax_save=", "Mmax=",
                                                    "dc-fields=",
                                                    "2,6-difluoro-iodobenzene", "benzonitrile", "iodobenzene",
-                                                   "water", "H2O", "D2O"])
+                                                   "water", "H2O", "D2O", "HDO"])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
