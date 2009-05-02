@@ -107,21 +107,30 @@ def main(args):
             # param.sextic =  convert.Hz2J(num.array([0.0609, -0.377])) # ignored sextic constants!
             param.dipole = convert.D2Cm(num.array([1.6250, 0., 0.]))
         elif o in ("--D2O", "--H2O", "--HDO", "--water"):
-            # rotational constans from Herzberg
-            # dipole moments from Clough, Beers, Klein, Rothman, J. Chem. Phys. 59, 2254-2259 (1973)
+            # get better data from
+            # - http://physics.nist.gov/PhysRefData/MolSpec/Triatomic/Html/Tables/H2O.html
+            # - DeLucia, Helminger, Kirchhoff, J. Phys. Chem. Ref. Data 3, 211 (1974)
+            # - DeLucia and Helminger, J. Mol. Spectrosc. 56, 138 (1975)
+            # - Steenbeckeliers, and Bellet, J. Mol. Spectrosc. 45, 10 (1973)
             name = "water"
             param.watson = 'A'
             if o in ("--H2O", "--water"):
+                # rotational constans from Benedict, Classen, Shaw, J. Res. Natl. Bur. Std. (U.S.) 49, 91 (1952)
+                # dipole moments from Clough, Beers, Klein, Rothman, J. Chem. Phys. 59, 2254-2259 (1973)
                 param.isomer = 0
                 param.symmetry = 'C2b'
-                param.rotcon = convert.invcm2J(num.array([27.79, 14.50, 9.96]))
+                param.rotcon = convert.invcm2J(num.array([27.877, 14.512, 9.285]))
                 param.dipole = convert.D2Cm(num.array([0., -1.8546, 0.]))
             elif o == "--D2O":
+                # rotational constans from Herzberg
+                # dipole moments from Clough, Beers, Klein, Rothman, J. Chem. Phys. 59, 2254-2259 (1973)
                 param.isomer = 1
                 param.symmetry = 'C2b'
                 param.rotcon = convert.invcm2J(num.array([15.39, 7.26, 4.85]))
                 param.dipole = convert.D2Cm(num.array([0., -1.8558, 0.]))
             elif o == "--HDO":
+                # rotational constans from Herzberg
+                # dipole moments from Clough, Beers, Klein, Rothman, J. Chem. Phys. 59, 2254-2259 (1973)
                 param.isomer = 2
                 param.symmetry = 'N'
                 param.rotcon = convert.invcm2J(num.array([23.48, 9.13, 6.40]))
