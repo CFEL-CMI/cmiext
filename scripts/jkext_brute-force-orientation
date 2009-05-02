@@ -87,7 +87,7 @@ def read_population(name):
     pop = []
     for line in file(name):
         J, Ka, Kc, M, p = line.split()
-        pop.append((State(int(J), int(Ka), int(Kc), int(M)), p))
+        pop.append((State(int(J), int(Ka), int(Kc), int(M)), float(p)))
     return pop
 
 
@@ -123,7 +123,7 @@ def main(args):
             field = convert.kV_cm2V_m(float(a))
         elif o in ("-J", "--Jmax"):
             Jmax = int(a)
-        elif o in ("--mu",):
+        elif o in ("-m", "--mu",):
             mu = convert.D2Cm(float(a))
         elif o in ("--nssw",):
             nssw = map(int, a.split(":"))
@@ -136,6 +136,7 @@ def main(args):
                 assert False, "unknown NSSW-type %s" % (a, )
         elif o in ("-p", "--population"):
             nonthermal = True
+            pop = a
         elif o in ("-T", "--temperature"):
             thermal = True
             temperature = float(a)
@@ -153,7 +154,7 @@ def main(args):
         if thermal == True:
             population = create_population(mol, temperature, Jmax, nsswtype, nssw)
         else:
-            population = read_population(a)
+            population = read_population(pop)
         # calculate orientation cosine -- loop over states
         cos_theta = 0.
         weight = 0.
