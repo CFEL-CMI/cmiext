@@ -50,7 +50,7 @@ def main(args):
     try:
         opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax_calc=", "Jmax_save=", "Mmax=",
                                                    "dc-fields=",
-                                                   "2,6-difluoro-iodobenzene", "benzonitrile", "iodobenzene",
+                                                   "2,6-difluoro-iodobenzene","p-aminobenzonitrile","benzonitrile", "iodobenzene",
                                                    "water", "H2O", "D2O", "HDO"])
     except getopt.GetoptError, err:
         # print help information and exit:
@@ -89,6 +89,14 @@ def main(args):
             param.rotcon = convert.Hz2J(num.array([1740e6, 713e6, 506e6]))
             param.quartic = convert.Hz2J(num.array([0., 0., 0., 0., 0.]))
             param.dipole = convert.D2Cm(num.array([2.25, 0., 0.]))
+        elif o == "--p-aminobenzonitrile":
+            # Borst et al., Chem. Phys. Lett. 350, p.485 (2001)
+            name = "p-aminobenzonitrile"
+            param.watson = 'A'
+            param.symmetry = 'C2a'
+            param.rotcon = convert.Hz2J(num.array([5.5793e9, 0.99026e9, 0.84139e9]))
+            param.quartic = convert.Hz2J(num.array([0.0, 0.0, 0.0, 0.0, 0.0]))
+            param.dipole = convert.D2Cm(num.array([6.41, 0., 0.]))
         elif o == "--benzonitrile":
             # Wohlfart, Schnell, Grabow, Küpper, J. Mol. Spec. 247, 119-121 (2008)
             name = "benzonitrile"
