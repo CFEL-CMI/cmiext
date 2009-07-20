@@ -291,7 +291,7 @@ class AsymmetricRotor:
                 if 0 == J:
                     blocks = {'A': num.zeros((1, 1), self.__hmat_type)}
                 else:
-                    blocks = self.__full_hamiltonian(J, J, None, None, 'V')
+                    blocks = self.__full_hamiltonian(J, J, None, 'V')
                 # store sorted eigenenergies for respective J and block
                 for sym in blocks.keys():
                     if 0 < blocks[sym].size:

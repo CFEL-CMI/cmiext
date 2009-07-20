@@ -187,7 +187,7 @@ class Molecule:
             for M in param.M:
                 energies = {}
                 for field in param.dcfields:
-                    calc = jkext.starkeffect.AsymmetricRotor(param, M, 0., field)
+                    calc = jkext.starkeffect.AsymmetricRotor(param, M, field)
                     for state in calc.states():
                         id = state.id()
                         if energies.has_key(id):
