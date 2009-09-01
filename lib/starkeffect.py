@@ -199,6 +199,65 @@ class AsymmetricRotor:
                 hmat[self.__index(J, K+2), self.__index(J, K)] += value
                 hmat[self.__index(J, K), self.__index(J, K+2)] += value
 
+                
+    def __stark_AC(self, hmat, Jmin, Jmax, acfield):
+        """Add the ac Stark-effect matrix element terms to hmat"""
+        alphaA = self.__polarizability[0,0]
+        alphaB = self.__polarizability[1,1]
+        alphaC = self.__polarizability[2,2]
+        sqrt = num.sqrt
+        M = self.__M
+        for J in range(Jmin,Jmax+1):
+            for K in range(-J,J+1):
+                # J'=J
+
+                value=-(1/12)*acfield**2*((alphaA+alphaB+alphaC)+(2*J+1)*4*(2*alphaA-alphaB-alphaC)* \
+                                                  self.__Atwo(2*J+3)**2*(3*(M**2)-J*(J+1))*(3*(K**2)-J*(J+1)))
+                hmat[self.__index(J,K),self.__index(J,K)]+=value
+                if K < J-1:
+                    value1=-(1/4)*acfield**2*(2*J+1)*(alphaB-alphaC)*self.__Atwo(2*J+1)**2*(3*(M**2)-J*(J+1))* \
+                    sqrt(6*(J+K+1)*(J+K+2)*(J-K-1)*(J-K))
+                    hmat[self.__index(J,K+2),self.__index(J,K)]+=value1
+                    hmat[self.__index(J,K),self.__index(J,K+2)]+=value1
+                #J'=J+1
+                if J<Jmax:
+                    value2=-(1/4)*acfield**2*sqrt((2*J+1)*(2*J+3))*1/3*(2*alphaA-alphaB-alphaC)*self.__Atwo(2*J+4)**2*\
+                    4*M*K*sqrt(6*6*(J-M+1)*(J+M+1)*(J-K+1)*(J+K+1))
+                    hmat[self.__index(J+1,K),self.__index(J,K)]+=value2
+                    hmat[self.__index(J,K),self.__index(J+1,K)]+=value2
+                    if K<J:
+                        value3=(1/4)*acfield**2*sqrt((2*J+1)*(2*J+3))*(alphaB-alphaC)*self.__Atwo(2*J+4)**2*\
+                        2*M*sqrt(6*4*(J-M+1)*(J+M+1)*(J+K+1)*(J+K+2)*(J+K+3)*(J-K))
+                        hmat[self.__index(J+1,K+2),self.__index(J,K)]+=value3
+                        hmat[self.__index(J,K),self.__index(J+1,K+2)]+=value3
+                    if K>-J:
+                        value4=(-1/4)*acfield**2*sqrt((2*J+1)*(2*J+3))*(alphaB-alphaC)*self.__Atwo(2*J+4)**2\
+                        *2*M*sqrt(6*4*(J-M+1)*(J+M+1)*(J+K-1)*(J+K-2)*(J+K-3)*(J+K))
+                        hmat[self.__index(J+1,K-2),self.__index(J,K)]+=value4
+                        hmat[self.__index(J,K),self.__index(J+1,K-2)]+=value4
+                # J'J+2   
+                if J<Jmax-1:
+                    value5=-(1/4)*acfield**2*sqrt((2*J+1)*(2*J+5))*1/3*(2*alphaA-alphaB-alphaC)*self.__Atwo(2*J+5)**2\
+                            *sqrt(6*6*(J-M+2)*(J-M+1)*(J+M+2)*(J+M+1)*(J-K+2)*(J-K+1)*(J+K+2)*(J+K+1))
+                    hmat[self.__index(J+2,K),self.__index(J,K)]+=value5
+                    hmat[self.__index(J,K),self.__index(J+2,K)]+=value5
+                    if K<=J:
+                        value6=(-1/4)*acfield**2*sqrt((2*J+1)*(2*J+5))*(alphaB-alphaC)*self.__Atwo(2*J+5)**2\
+                                *sqrt(6*(J-M+2)*(J-M+1)*(J+M+2)*(J+M+1)*(J+K+1)*(J+K+2)*(J+K+3)*(J+K+4))
+                        hmat[self.__index(J+2,K+2),self.__index(J,K)]+=value6
+                        hmat[self.__index(J,K),self.__index(J+2,K+2)]+=value6
+                    if K>=-J:
+                        value7=(-1/4)*acfield**2*sqrt((2*J+1)*(2*J+5))*(alphaB-alphaC)*self.__Atwo(2*J+5)**2\
+                                *sqrt(6*(J-M+2)*(J-M+1)*(J+M+2)*(J+M+1)*(J-K+1)*(J-K+2)*(J-K+3)*(J-K+4))
+                        hmat[self.__index(J+2,K-2),self.__index(J,K)]+=value7
+                        hmat[self.__index(J,K),self.__index(J+2,K-2)]+=value7
+            
+    def __Atwo(self,X):
+        "help function for AC stark elements"
+        if X>4:
+            return (X*(X-1)*(X-2)*(X-3)*(X-4))**(-1/2)
+        else:
+            return 0
 
     def __stark_DC(self, hmat, Jmin, Jmax, dcfield):
         """Add the dc Stark-effect matrix element terms to hmat"""
