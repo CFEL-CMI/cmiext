@@ -36,3 +36,4 @@ except ImportError:
     plancks_constant_h = 6.6260689599999996e-34
     speed_of_light = 299792458.
     unified_atomic_mass = 1.6605387820000001e-27
+    vacuum_permittivity = 8.854187817e-12
