@@ -43,10 +43,15 @@ def usage():
     # ToDo implement a useful usage description
     print "See script for details"
 
-
+def test(Ka,plotK):
+    if plotK == True or (plotK == False and Ka == 0):
+        return True
+    else:
+        return False
+    
 def main(args):
     try:
-        opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax="])
+        opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax=", "lin"])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -55,6 +60,7 @@ def main(args):
     # default values
     Jmin = 0
     Jmax = 2
+    plotK = True
     # scan commandline
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -64,6 +70,9 @@ def main(args):
             Jmin = int(a)
         elif o == "--Jmax":
             Jmax = int(a)
+        elif o == "--lin":
+            print "snydt"
+            plotK = False
         else:
             assert False, "unhandled commandline option"
 
@@ -86,27 +95,32 @@ def main(args):
                     fields, energies, acfields, omega, deltaomega = mol.starkeffect(state)
                     if len(acfields)>1: # we only want the ac field free states right now
                         energies=energies[:,0]
-                    plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6, color)
+                    if test(Ka,plotK):
+                        plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6, color)
                     if Kc > 0:
                         Ka += 1
                         state = State(J, Ka, Kc, M, 0)
                         fields, energies, acfields, omega, deltaomega = mol.starkeffect(state)
                         if len(acfields)>1: # we only want the ac field free states
                             energies=energies[:,0]
-                        plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6, color)
+                        if test(Ka,plotK):
+                            plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6, color)
         plt.figure(2)
         # plot effective dipole moment
         for J in range(Jmin, Jmax+1):
-            Ka = 0
-            for Kc in range(J, -1, -1):
-                state = State(J, Ka, Kc, 0, 0)
-                fields, mueff = mol.mueff(state)
-                plt.plot(V_m2kV_cm(fields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1), color)
-                if Kc > 0:
-                    Ka += 1
-                    state = State(J, Ka, Kc, 0, 0)
+            for M in range(0, J+1):
+                Ka = 0
+                for Kc in range(J, -1, -1):
+                    state = State(J, Ka, Kc, M, 0)
                     fields, mueff = mol.mueff(state)
-                    plt.plot(V_m2kV_cm(fields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1), color)
+                    if test(Ka,plotK):
+                        plt.plot(V_m2kV_cm(fields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1), color)
+                    if Kc > 0:
+                        Ka += 1
+                        state = State(J, Ka, Kc, M, 0)
+                        fields, mueff = mol.mueff(state)
+                        if test(Ka,plotK):
+                            plt.plot(V_m2kV_cm(fields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1), color)
     plt.show()
 
 
