@@ -79,16 +79,21 @@ def main(args):
         mol = molecule.Molecule(storage=name)
         # plot energies
         for J in range(Jmin, Jmax+1):
-            Ka = 0
-            for Kc in range(J, -1, -1):
-                state = State(J, Ka, Kc, 0, 0)
-                fields, energies = mol.starkeffect(state)
-                plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6, color)
-                if Kc > 0:
-                    Ka += 1
-                    state = State(J, Ka, Kc, 0, 0)
-                    fields, energies = mol.starkeffect(state)
+            for M in range(0, J+1):
+                Ka = 0
+                for Kc in range(J, -1, -1):
+                    state = State(J, Ka, Kc, M, 0)
+                    fields, energies, acfields, omega, deltaomega = mol.starkeffect(state)
+                    if len(acfields)>1: # we only want the ac field free states right now
+                        energies=energies[:,0]
                     plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6, color)
+                    if Kc > 0:
+                        Ka += 1
+                        state = State(J, Ka, Kc, M, 0)
+                        fields, energies, acfields, omega, deltaomega = mol.starkeffect(state)
+                        if len(acfields)>1: # we only want the ac field free states
+                            energies=energies[:,0]
+                        plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6, color)
         plt.figure(2)
         # plot effective dipole moment
         for J in range(Jmin, Jmax+1):

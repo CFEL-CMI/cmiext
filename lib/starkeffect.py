@@ -57,6 +57,7 @@ class CalculationParameter:
     Jmax_save = 2
     isomer = 0
     # fields
+    acfields = num.zeros((1,), num.float64)
     dcfields = jkext.convert.kV_cm2V_m(num.array((0, 100.), num.float64))
     # molecular parameters
     rotcon = num.zeros((3,), num.float64)    # Joule
@@ -71,23 +72,26 @@ class CalculationParameter:
 class AsymmetricRotor:
     """Representation of an asymmetric top for energy level calculation purposes.
 
-    This object will calculate rotational energies at the specified DC field strength for the given M-value and J-range
-    and all K's.
+    This object will calculate rotational energies at the specified AC and DC field strength for the given M-value and
+    J-range and all K's.
     """
 
-    def __init__(self, param, M, dcfield=0.):
+    def __init__(self, param, M, acfield=0., dcfield=0.):
         """Save the relevant parameters"""
         assert 'A' == param.type.upper()
         # we have not yet calculated the correct energies - mark invalid
         self.__valid = False
         self.__stateorder_valid = False
         # save parameters internally
+        self.__acfield = num.float64(acfield)
         self.__dcfield = num.float64(dcfield)
         self.__rotcon = num.array(param.rotcon, num.float64)
         self.__quartic = num.array(param.quartic, num.float64)
         self.__dipole = num.array(param.dipole, num.float64)
+        self.__polarizability = num.array(param.polarizability, num.float64)
         self.__watson = param.watson
         self.__symmetry = param.symmetry # symmetry of Hamiltonian (possible values: 'N', 'C2a', 'C2b', 'C2c', 'V')
+        self.__type = param.type
         # save quantum numbers
         self.__M = int(M) # use the single spefied M
         self.__isomer = int(param.isomer)
@@ -110,12 +114,17 @@ class AsymmetricRotor:
             self.__hmat_type = num.float64
 
 
-
+    
     def energy(self, state):
         """Return Stark energy for |state|."""
         if self.__valid == False:
             self.__recalculate()
         return self.__levels[state.id()]
+
+
+    def field_AC(self):
+        """Return AC field for which the Stark energies were calculated."""
+        return self.__acfield
 
 
     def field_DC(self):
@@ -148,7 +157,7 @@ class AsymmetricRotor:
     def __recalculate(self):
         """Perform calculation of rotational state energies for current parameters"""
         self.__levels = {}
-        blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__dcfield, self.__symmetry)
+        blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__acfield, self.__dcfield, self.__symmetry)
         for symmetry in blocks.keys():
             eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate only energies
             eval = num.sort(eval)
@@ -161,7 +170,7 @@ class AsymmetricRotor:
         self.__valid = True
 
 
-    def __full_hamiltonian(self, Jmin, Jmax, dcfield, symmetry):
+    def __full_hamiltonian(self, Jmin, Jmax, acfield, dcfield, symmetry):
         """Return block-diagonalized Hamiltonian matrix (blocks)"""
         self.__Jmin_matrixsize = Jmin *(Jmin-1) + Jmin # this is used by __index
         matrixsize = (Jmax + 1) * Jmax + Jmax + 1 - self.__Jmin_matrixsize
@@ -177,6 +186,8 @@ class AsymmetricRotor:
         else:
             assert self.__watson == None
         # fill matrix with appropriate Stark terms for nonzero fields
+        if None != acfield and self.__tiny < abs(acfield):
+            self.__stark_AC(hmat, Jmin, Jmax, acfield)
         if None != dcfield and self.__tiny < abs(dcfield):
             self.__stark_DC(hmat, Jmin, Jmax, dcfield)
         blocks = self.__wang(hmat, symmetry, Jmin, Jmax)
@@ -350,7 +361,7 @@ class AsymmetricRotor:
                 if 0 == J:
                     blocks = {'A': num.zeros((1, 1), self.__hmat_type)}
                 else:
-                    blocks = self.__full_hamiltonian(J, J, None, 'V')
+                    blocks = self.__full_hamiltonian(J, J, None, None, 'V')
                 # store sorted eigenenergies for respective J and block
                 for sym in blocks.keys():
                     if 0 < blocks[sym].size:
@@ -551,12 +562,30 @@ if __name__ == "__main__":
     p.rotcon = jkext.convert.Hz2J(num.array([5e9, 2e9, 1.4e9]))
     p.quartic = jkext.convert.Hz2J([1e3, 1e3, 1e3, 1e3, 1e3])
     p.dipole = jkext.convert.D2Cm([.0, .0, 1.0])
+    p.polarizability[0,0] = jkext.convert.A32CM2_V(21.5)
+    p.polarizability[1,1] = jkext.convert.A32CM2_V(15.3)
+    p.polarizability[2,2] = jkext.convert.A32CM2_V(10.2)
     p.watson = 'A'
     p.symmetry = 'N'
     for M in p.M:
-        for field in jkext.convert.kV_cm2V_m((0., 1., 100.)):
-            print "\nM = %d, field strength = %.0f kV/cm" % (M, jkext.convert.V_m2kV_cm(field))
-            top = AsymmetricRotor(p, M, 0., field)
+        for dcfield in jkext.convert.kV_cm2V_m((0., 1., 100.)):
+            print "\nM = %d, field strength = %.0f kV/cm" % (M, jkext.convert.V_m2kV_cm(dcfield))
+            top = AsymmetricRotor(p, M, 0., dcfield)
+            for state in [State(0, 0, 0, M, p.isomer),
+                          State(1, 0, 1, M, p.isomer), State(1, 1, 1, M, p.isomer), State(1, 1, 0, M, p.isomer),
+                          State(2, 0, 2, M, p.isomer), State(2, 1, 2, M, p.isomer), State(2, 1, 1, M, p.isomer),
+                          State(2, 2, 1, M, p.isomer), State(2, 2, 0, M, p.isomer),
+                          State(3, 0, 3, M, p.isomer), State(3, 1, 3, M, p.isomer), State(3, 1, 2, M, p.isomer),
+                          State(3, 2, 2, M, p.isomer), State(3, 2, 1, M, p.isomer), State(3, 3, 1, M, p.isomer),
+                          State(3, 3, 0, M, p.isomer)]:
+                if state.M() <= state.J() and state.J() <= p.Jmax_save:
+                    print state.name(), "%12.3f MHz %8.3f cm-1 %10.3g J" \
+                        % (jkext.convert.J2MHz(top.energy(state)), jkext.convert.J2invcm(top.energy(state)), top.energy(state))
+    for M in p.M:
+        for acfield in (0., 2.69e9, 2.7e9):
+            print "\nM = %d, field strength = %.0f kV/cm" % (M, jkext.convert.V_m2kV_cm(acfield))
+            print acfield
+            top = AsymmetricRotor(p, M, acfield, 0.)
             for state in [State(0, 0, 0, M, p.isomer),
                           State(1, 0, 1, M, p.isomer), State(1, 1, 1, M, p.isomer), State(1, 1, 0, M, p.isomer),
                           State(2, 0, 2, M, p.isomer), State(2, 1, 2, M, p.isomer), State(2, 1, 1, M, p.isomer),
