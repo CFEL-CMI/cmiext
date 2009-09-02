@@ -71,7 +71,6 @@ def main(args):
         elif o == "--Jmax":
             Jmax = int(a)
         elif o == "--lin":
-            print "snydt"
             plotK = False
         else:
             assert False, "unhandled commandline option"
