@@ -86,9 +86,9 @@ def acfields2deltaomega(acfields,rotcon,polarizability):
     return acfields**2*polarizability/(4*rotcon)
 
 def omega2dcfields(omega,rotcon,dipole):
-    
+    assert dipole != 0
     return numpy.array(omega)*rotcon/dipole
 
 def deltaomega2acfields(deltaomega,rotcon,polarizability):
-
+    assert polarizability != 0
     return (numpy.array(deltaomega)*4*rotcon/polarizability)**0.5
