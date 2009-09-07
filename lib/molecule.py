@@ -22,6 +22,7 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 import numpy as num
 import numpy.linalg
 import const
+import convert
 import tables
 import jkext.hdf5, jkext.starkeffect, jkext.util, jkext.convert
 from jkext.state import State
@@ -73,7 +74,7 @@ class Molecule:
     positions.
     """
 
-    def __init__(self, atoms=None, storage=None, name="Generic molecule"):
+    def __init__(self, atoms=None, storage=None, name="Generic molecule", param=None):
         """Create Molecule from a list of atoms."""
         self.__atoms = atoms
         self.__name = name
@@ -83,8 +84,21 @@ class Molecule:
             self.__storage = None
         if atoms != None:
             self.__update()
+        if param != None:
+            self.__saveparam(param)
 
+    def __saveparam(self,param):
+        jkext.hdf5.writeVLArray(self.__storage, "/param", "dipole", param.dipole)
+        jkext.hdf5.writeVLArray(self.__storage, "/param", "polarizability", param.polarizability,\
+                                atom=tables.Float64Atom(shape=(3)))
+        jkext.hdf5.writeVLArray(self.__storage, "/param", "rotcon", param.rotcon)
 
+    def getparam(self,param):
+        param.dipole=jkext.hdf5.readVLArray(self.__storage, "/param"+ "/dipole")
+        param.polarizability=jkext.hdf5.readVLArray(self.__storage, "/param" + "/polarizability")
+        param.rotcon=jkext.hdf5.readVLArray(self.__storage, "/param"+ "/rotcon")
+    
+        
     def __update(self):
         self.masses = num.zeros((len(self.__atoms),))
         for i in range(self.masses.shape[0]):
@@ -92,7 +106,7 @@ class Molecule:
         self.positions = num.zeros((len(self.__atoms), 3))
         for i in range(self.positions.shape[0]):
             self.positions[i,:] = self.__atoms[i].position
-
+    
 
     def center_of_mass(self):
         """Calculate center of mass of molecule"""
@@ -161,7 +175,7 @@ class Molecule:
 
         Return the effective dipole moment curve for the specified quantum |state|.
         """
-        fields, energies, acfields, omega, deltaomega = self.starkeffect(state)
+        fields, energies, acfields = self.starkeffect(state)
         energies = energies[:,0] #only get the first energies(most likely ac field free)
         assert len(fields) == len(energies)
         mueff = num.zeros((len(fields),), num.float64)
@@ -175,15 +189,16 @@ class Molecule:
 
         Return the effective dipole moment curve for the specified quantum |state|.
         """
-        fields, energies, acfields, omega, deltaomega = self.starkeffect(state)
+        dcfields, energies, acfields = self.starkeffect(state)
+        omega=convert.dcfields2omega(dcfields,param.rotcon[1],param.dipole[0])
         energies = energies[:,0] 
         assert len(omega) == len(energies)
-        cos = num.zeros((len(fields),), num.float64)
+        cos = num.zeros((len(dcfields),), num.float64)
         cos[1:-1] = -1 * (energies[0:-2]/param.rotcon[1] - energies[2:]/param.rotcon[1]) / (omega[0:-2] - omega[2:])
         # we are missing a omega_perp but here it is zero anyway
-        cos[0] = cos[1]
+        cos[0] = 0
         cos[-1] = cos[-2]
-        return fields, cos
+        return dcfields, cos
     
 
 
@@ -192,7 +207,7 @@ class Molecule:
 
         Return the effective dipole moment curve for the specified quantum |state|.
         """
-        dcfields, energies, acfields, omega, deltaomega = self.starkeffect(state)
+        dcfields, energies, acfields = self.starkeffect(state)
         energies = energies[0,:] #only get the first energies(most likely dc field free)
         assert len(acfields) == len(energies)
         cos2 = num.zeros((len(acfields),), num.float64)
@@ -204,7 +219,7 @@ class Molecule:
         return acfields, cos2
     
 
-    def starkeffect(self, state, dcfields=None, energies=None, acfields=None, omega=None, deltaomega=None):
+    def starkeffect(self, state, dcfields=None, energies=None, acfields=None):
         """Get or set the potential energies as a function of the electric field strength.
 
         When |energies| and |fields| are None, return the Stark curve for the specified quantum state.
@@ -212,20 +227,16 @@ class Molecule:
         When |energies| and |fields| are specified, save the Stark curve for the specified quantum state in the
         Molecule's HDF5 storage file.
         """
-        if energies == None and dcfields == None and acfields == None and omega == None and deltaomega == None:
+        if energies == None and dcfields == None and acfields == None:
             return jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/dcfield"), \
                    jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/dcstarkenergy"), \
-                   jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/acfield"), \
-                   jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/omega"), \
-                   jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/deltaomega"),
-        elif energies == None or dcfields == None or acfields == None or omega == None or deltaomega == None:
+                   jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/acfield")
+        elif energies == None or dcfields == None or acfields == None:
             raise SyntaxError
         else:
             assert len(dcfields) == energies.shape[0] and  len(acfields) == energies.shape[1]
             jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "dcfield", dcfields)
-            jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "omega", omega)
             jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "acfield", acfields)
-            jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "deltaomega", deltaomega)
             jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "dcstarkenergy", \
             energies,comment="", atom=tables.Float64Atom(shape=(len(acfields))))
 
@@ -245,13 +256,13 @@ class Molecule:
                                 energies[id] = num.array((calc.energy(state),))
                 # store calculated values for this M
                 for id in energies.keys():
-                    self.starkeffect_merge(State().fromid(id), param.dcfields, energies[id], param.acfields, param.omega, param.deltaomega)
+                    self.starkeffect_merge(State().fromid(id), param.dcfields, energies[id], param.acfields)
         else:
             raise NotImplementedError("unknown rotor type in Stark energy calculation.")
         self.__storage.flush()
 
 
-    def starkeffect_merge(self, state, newdcfields=None, newenergies=None, newacfields=None, newomega = None, newdeltaomega = None):
+    def starkeffect_merge(self, state, newdcfields=None, newenergies=None, newacfields=None):
         """Merge the specified pairs of field strength and Stark energies into the existing data.
 
         not really tested
@@ -268,9 +279,7 @@ class Molecule:
             dcfields = newdcfields
             energies = reshapedenergies
             acfields = newacfields
-            omega = newomega
-            deltaomega = newdeltaomega
-        self.starkeffect(state, dcfields, energies, acfields, omega, deltaomega)
+        self.starkeffect(state, dcfields, energies, acfields)
 
     def starkeffect_states(self):
         """Get a list of states for which we know the Stark effect."""
@@ -299,9 +308,9 @@ if __name__ == "__main__":
     param.rotcon = Hz2J(num.array([5000e6, 1500e6, 1200e6]))
     param.quartic = Hz2J(num.array([50., 1000., 500, 10., 600]))
     param.dipole = D2Cm(num.array([5, 0., 0.]))
-    param.polarizability[0,0] = jkext.convert.A32CM2_V(21.5)
-    param.polarizability[1,1] = jkext.convert.A32CM2_V(15.3)
-    param.polarizability[2,2] = jkext.convert.A32CM2_V(10.2)
+    param.polarizability[0,0] = A32CM2_V(21.5)
+    param.polarizability[1,1] = A32CM2_V(15.3)
+    param.polarizability[2,2] = A32CM2_V(10.2)
     # calculation details
     param.M = [0]
     param.Jmin = 0
@@ -318,10 +327,10 @@ if __name__ == "__main__":
         Ka = 0
         for Kc in range(J, -1, -1):
             state = State(J, Ka, Kc, 0, 0)
-            dcfields, energies, acfields, omega, deltaomega = mol.starkeffect(state)
+            dcfields, energies, acfields = mol.starkeffect(state)
             print state.name(), V_m2kV_cm(dcfields), V_m2kV_cm(acfields), "\n", J2Hz(energies) / 1e6
             if Kc > 0:
                 Ka += 1
                 state = State(J, Ka, Kc, 0, 0)
-                dcfields, energies, acfields, omega, deltaomega = mol.starkeffect(state)
+                dcfields, energies, acfields = mol.starkeffect(state)
                 print state.name(), V_m2kV_cm(dcfields), V_m2kV_cm(acfields), "\n", J2Hz(energies) / 1e6

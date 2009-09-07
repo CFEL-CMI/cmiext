@@ -81,18 +81,6 @@ def main(args):
             plotAC = True
         else:
             assert False, "unhandled commandline option"
-    param = starkeffect.CalculationParameter
-    param.type = "A"
-    param.Jmax_calc = 10
-    param.Jmax_save = 3
-    param.watson = None
-    param.symmetry = 'C2a'
-    param.rotcon = invcm2J(num.array([1000000*0.20286, 0.20286, 0.20286]))
-    param.quartic = Hz2J(num.array([0, 0, 0, 0, 0]))
-    param.dipole = D2Cm(num.array([0.712, 0., 0.]))
-    param.polarizability[0,0] = A32CM2_V(4.07)
-    param.polarizability[1,1] = A32CM2_V(0)
-    param.polarizability[2,2] = A32CM2_V(0)
     # loop over all remaining arguments -- asumming its filenames of HDF5 Stark-files
     colors = ['black', 'blue', 'red', 'green']
     colorindex = 0
@@ -101,7 +89,9 @@ def main(args):
         if colorindex > len(colors): colorindex = 0
         color = colors[colorindex]
         # create Molecule object and specify storage file
+        param = starkeffect.CalculationParameter
         mol = molecule.Molecule(storage=name)
+        mol.getparam(param)
         # plot energies
         assert plotAC == True or plotDC == True
         if plotDC:
@@ -113,19 +103,19 @@ def main(args):
                     Ka = 0
                     for Kc in range(J, -1, -1):
                         state = State(J, Ka, Kc, M, 0)
-                        fields, energies, acfields, omega, deltaomega = mol.starkeffect(state)
+                        dcfields, energies, acfields = mol.starkeffect(state)
                         if len(acfields)>1: # we only want the ac field free states right now
                             energies=energies[:,0]
                         if test(Ka,plotK):
-                            plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6, color)
+                            plt.plot(V_m2kV_cm(dcfields), J2Hz(energies) / 1e6, color)
                         if Kc > 0:
                             Ka += 1
                             state = State(J, Ka, Kc, M, 0)
-                            fields, energies, acfields, omega, deltaomega = mol.starkeffect(state)
+                            dcfields, energies, acfields = mol.starkeffect(state)
                             if len(acfields)>1: # we only want the ac field free states
                                 energies=energies[:,0]
                             if test(Ka,plotK):
-                                plt.plot(V_m2kV_cm(fields), J2Hz(energies) / 1e6, color)
+                                plt.plot(V_m2kV_cm(dcfields), J2Hz(energies) / 1e6, color)
             plt.figure(2)
             plt.xlabel(r'DC field [kV/cm]')
             plt.ylabel(r'Effective dipole moment')
@@ -135,15 +125,15 @@ def main(args):
                     Ka = 0
                     for Kc in range(J, -1, -1):
                         state = State(J, Ka, Kc, M, 0)
-                        fields, mueff = mol.mueff(state)
+                        dcfields, mueff = mol.mueff(state)
                         if test(Ka,plotK):
-                            plt.plot(V_m2kV_cm(fields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1), color)
+                            plt.plot(V_m2kV_cm(dcfields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1), color)
                         if Kc > 0:
                             Ka += 1
                             state = State(J, Ka, Kc, M, 0)
-                            fields, mueff = mol.mueff(state)
+                            dcfields, mueff = mol.mueff(state)
                             if test(Ka,plotK):
-                                plt.plot(V_m2kV_cm(fields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1), color)
+                                plt.plot(V_m2kV_cm(dcfields), J2Hz(mueff) / 1e6 / V_m2kV_cm(1), color)
             plt.figure(3)
             plt.xlabel(r'$\omega$')
             plt.ylabel(r'$\cos\theta$')
@@ -152,13 +142,15 @@ def main(args):
                     Ka = 0
                     for Kc in range(J, -1, -1):
                         state = State(J, Ka, Kc, M, 0)
-                        fields, coshellmann = mol.coshellmann(state,param)
+                        dcfields, coshellmann = mol.coshellmann(state,param)
+                        omega=dcfields2omega(dcfields,param.rotcon[1],param.dipole[0])
                         if test(Ka,plotK):
                             plt.plot(omega, coshellmann, color)
                         if Kc > 0:
                             Ka += 1
                             state = State(J, Ka, Kc, M, 0)
-                            fields, coshellmann = mol.coshellmann(state,param)
+                            dcfields, coshellmann = mol.coshellmann(state,param)
+                            omega=dcfields2omega(dcfields,param.rotcon[1],param.dipole[0])
                             if test(Ka,plotK):
                                 plt.plot(omega, coshellmann, color)
         # ac energies
@@ -171,14 +163,16 @@ def main(args):
                     Ka = 0
                     for Kc in range(J, -1, -1):
                         state = State(J, Ka, Kc, M, 0)
-                        dcfields, energies, acfields, omega, deltaomega = mol.starkeffect(state) 
+                        dcfields, energies, acfields = mol.starkeffect(state)
+                        deltaomega=acfields2deltaomega(acfields,param.rotcon[1],param.polarizability[0][0])
                         energies=energies[0,:] # we only want the dc field free states
                         if test(Ka,plotK):
                             plt.plot(deltaomega, energies/param.rotcon[1], color)
                         if Kc > 0:
                             Ka += 1
                             state = State(J, Ka, Kc, M, 0)
-                            dcfields, energies, acfields, omega, deltaomega = mol.starkeffect(state)
+                            dcfields, energies, acfields = mol.starkeffect(state)
+                            deltaomega=acfields2deltaomega(acfields,param.rotcon[1],param.polarizability[0][0])
                             energies=energies[0,:] # we only want the dc field free states
                             if test(Ka,plotK):
                                 plt.plot(deltaomega, energies/param.rotcon[1], color)
@@ -192,13 +186,15 @@ def main(args):
                     Ka = 0
                     for Kc in range(J, -1, -1):
                         state = State(J, Ka, Kc, M, 0)
-                        fields, cos2 = mol.cos2hellmann(state,param)
+                        acfields, cos2 = mol.cos2hellmann(state,param)
+                        deltaomega=acfields2deltaomega(acfields,param.rotcon[1],param.polarizability[0][0])
                         if test(Ka,plotK):
                             plt.plot(deltaomega, cos2 , color)
                         if Kc > 0:
                             Ka += 1
                             state = State(J, Ka, Kc, M, 0)
-                            fields, cos2 = mol.cos2hellmann(state,param)
+                            acfields, cos2 = mol.cos2hellmann(state,param)
+                            deltaomega=acfields2deltaomega(acfields,param.rotcon[1],param.polarizability[0][0])
                             if test(Ka,plotK):
                                 plt.plot(deltaomega,cos2, color)
     plt.show()

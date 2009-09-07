@@ -200,9 +200,10 @@ def main(args):
         param.acfields = convert.deltaomega2acfields(param.deltaomega,param.rotcon[1],param.polarizability[0,0])
     if None == param.M:
         param.M = range(0, param.Jmax_save+1)
-
+        
+    
     # perform calculation
-    mol = molecule.Molecule(storage=name+".hdf")
+    mol = molecule.Molecule(storage=name+".hdf",param=param)
     mol.starkeffect_calculation(param)
     # close file
     del mol
