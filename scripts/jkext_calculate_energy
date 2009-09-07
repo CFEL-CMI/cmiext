@@ -66,8 +66,8 @@ def main(args):
     param.Jmax_calc = 5
     param.Jmax_save = 2
     param.M = None
-    param.deltaomega = None #num.linspace(0., 0., 1)
-    param.omega =  None #num.linspace(0., 0., 1)
+    param.deltaomega = None
+    param.omega =  None
     # scan commandline
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -84,11 +84,9 @@ def main(args):
         elif o == "--dc-fields":
             min, max, steps = a.split(":")
             param.dcfields = convert.kV_cm2V_m(num.linspace(float(min), float(max), int(steps)))
-            param.omega = None
         elif o == "--ac-fields":
             min, max, steps = a.split(":")
             param.acfields = convert.kV_cm2V_m(num.linspace(float(min), float(max), int(steps)))
-            param.deltaomega = None
         elif o == "--omega":
             min, max, steps = a.split(":")
             param.omega = num.linspace(float(min), float(max), int(steps))
@@ -190,10 +188,7 @@ def main(args):
 
     assert (None != param.omega) ^ (None != param.dcfields)
     assert (None != param.deltaomega) ^ (None != param.acfields)
-    if None == param.omega:
-        param.omega = convert.dcfields2omega(param.dcfields,param.rotcon[1],param.dipole[0])
-    if None == param.deltaomega:
-        param.deltaomega = convert.acfields2deltaomega(param.acfields,param.rotcon[1],param.polarizability[0,0])
+    # This conversion has to be done after the loop over molecules in order to have the paramerters set.
     if None == param.dcfields:
         param.dcfields = convert.omega2dcfields(param.omega,param.rotcon[1],param.dipole[0])
     if None == param.acfields:
