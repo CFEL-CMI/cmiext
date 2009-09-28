@@ -25,7 +25,10 @@
 #$ -V
 from __future__ import division
 
-"""Calculate brute force orientation for ensemble of asymmetric top molecules"""
+"""Calculate brute force orientation for ensemble of asymmetric top molecules
+
+TODO: entend this to include AC Stark effect and to calculate cos^2\theta (keep it simple)
+"""
 
 __author__ = "Frank Filsinger and Jochen Küpper"
 
