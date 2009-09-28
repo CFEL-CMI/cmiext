@@ -60,7 +60,7 @@ def main(args):
     # default values
     param = starkeffect.CalculationParameter
     param.dcfields = convert.kV_cm2V_m(num.linspace(0., 100., 3))
-    param.acfields = convert.kV_cm2V_m(num.linspace(0., 100., 3))
+    param.acfields = num.linspace(0., 1e8, 2)
     param.isomer = 0
     param.Jmin = 0
     param.Jmax_calc = 5
@@ -195,8 +195,8 @@ def main(args):
         param.acfields = convert.deltaomega2acfields(param.deltaomega,param.rotcon[1],param.polarizability[0,0])
     if None == param.M:
         param.M = range(0, param.Jmax_save+1)
-        
-    
+
+
     # perform calculation
     mol = molecule.Molecule(storage=name+".hdf",param=param)
     mol.starkeffect_calculation(param)

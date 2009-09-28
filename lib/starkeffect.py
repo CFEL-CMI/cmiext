@@ -88,7 +88,7 @@ class AsymmetricRotor:
         self.__rotcon = num.array(param.rotcon, num.float64)
         self.__quartic = num.array(param.quartic, num.float64)
         self.__dipole = num.array(param.dipole, num.float64)
-        self.__polarizability = num.array(param.polarizability, num.float64)
+        self.__polarizability = num.array(param.polarizability, num.float64) # full tensor, but only principal moments of polarizability used!
         self.__watson = param.watson
         self.__symmetry = param.symmetry # symmetry of Hamiltonian (possible values: 'N', 'C2a', 'C2b', 'C2c', 'V')
         self.__type = param.type
@@ -114,7 +114,7 @@ class AsymmetricRotor:
             self.__hmat_type = num.float64
 
 
-    
+
     def energy(self, state):
         """Return Stark energy for |state|."""
         if self.__valid == False:
@@ -210,7 +210,7 @@ class AsymmetricRotor:
                 hmat[self.__index(J, K+2), self.__index(J, K)] += value
                 hmat[self.__index(J, K), self.__index(J, K+2)] += value
 
-                
+
     def __stark_AC(self, hmat, Jmin, Jmax, acfield):
         """Add the ac Stark-effect matrix element terms to hmat"""
         alphaA = self.__polarizability[0,0]
@@ -246,7 +246,7 @@ class AsymmetricRotor:
                         *2*M*sqrt(6*4*(J-M+1)*(J+M+1)*(J+K-1)*(J+K-2)*(J+K-3)*(J+K))
                         hmat[self.__index(J+1,K-2),self.__index(J,K)]+=value4
                         hmat[self.__index(J,K),self.__index(J+1,K-2)]+=value4
-                # J'J+2   
+                # J'J+2
                 if J<Jmax-1:
                     value5=-(1/4)*acfield**2*sqrt((2*J+1)*(2*J+5))*1/3*(2*alphaA-alphaB-alphaC)*self.__Atwo(2*J+5)**2\
                             *sqrt(6*6*(J-M+2)*(J-M+1)*(J+M+2)*(J+M+1)*(J-K+2)*(J-K+1)*(J+K+2)*(J+K+1))
@@ -262,7 +262,7 @@ class AsymmetricRotor:
                                 *sqrt(6*(J-M+2)*(J-M+1)*(J+M+2)*(J+M+1)*(J-K+1)*(J-K+2)*(J-K+3)*(J-K+4))
                         hmat[self.__index(J+2,K-2),self.__index(J,K)]+=value7
                         hmat[self.__index(J,K),self.__index(J+2,K-2)]+=value7
-            
+
     def __Atwo(self,X):
         "help function for AC stark elements"
         if X>4:

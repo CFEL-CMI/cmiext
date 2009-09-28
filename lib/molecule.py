@@ -87,18 +87,27 @@ class Molecule:
         if param != None:
             self.__saveparam(param)
 
-    def __saveparam(self,param):
+
+    def __saveparam(self, param):
+        """Store all relevant calculation parameters.
+
+        TODO: Needs to be per-isomer!"""
         jkext.hdf5.writeVLArray(self.__storage, "/param", "dipole", param.dipole)
         jkext.hdf5.writeVLArray(self.__storage, "/param", "polarizability", param.polarizability,\
                                 atom=tables.Float64Atom(shape=(3)))
         jkext.hdf5.writeVLArray(self.__storage, "/param", "rotcon", param.rotcon)
 
-    def getparam(self,param):
+
+    def getparam(self, param):
+        """Retrieve stored calculation parameters.
+
+        TODO: Needs to be per-isomer!
+        TODO: non private?"""
         param.dipole=jkext.hdf5.readVLArray(self.__storage, "/param"+ "/dipole")
         param.polarizability=jkext.hdf5.readVLArray(self.__storage, "/param" + "/polarizability")
         param.rotcon=jkext.hdf5.readVLArray(self.__storage, "/param"+ "/rotcon")
-    
-        
+
+
     def __update(self):
         self.masses = num.zeros((len(self.__atoms),))
         for i in range(self.masses.shape[0]):
@@ -106,7 +115,7 @@ class Molecule:
         self.positions = num.zeros((len(self.__atoms), 3))
         for i in range(self.positions.shape[0]):
             self.positions[i,:] = self.__atoms[i].position
-    
+
 
     def center_of_mass(self):
         """Calculate center of mass of molecule"""
@@ -123,7 +132,7 @@ class Molecule:
         """returns the boltzmann weight of all states up to Jmax only for linear molecules now"""
         J = num.arange(Jmax)
         w = num.exp(-param.rotcon[1]*J*(J+1)/(T*const.boltzmann+1e-100))
-        wg = (2*J+1)*w 
+        wg = (2*J+1)*w
         Z = sum(wg)
         w = w/Z
         return w
@@ -191,7 +200,7 @@ class Molecule:
         """
         dcfields, energies, acfields = self.starkeffect(state)
         omega=convert.dcfields2omega(dcfields,param.rotcon[1],param.dipole[0])
-        energies = energies[:,0] 
+        energies = energies[:,0]
         assert len(omega) == len(energies)
         cos = num.zeros((len(dcfields),), num.float64)
         cos[1:-1] = -1 * (energies[0:-2]/param.rotcon[1] - energies[2:]/param.rotcon[1]) / (omega[0:-2] - omega[2:])
@@ -199,7 +208,7 @@ class Molecule:
         cos[0] = 0
         cos[-1] = cos[-2]
         return dcfields, cos
-    
+
 
 
     def cos2hellmann(self, state,param):
@@ -217,7 +226,7 @@ class Molecule:
         cos2[0] = cos2[1]
         cos2[-1] = cos2[-2]
         return acfields, cos2
-    
+
 
     def starkeffect(self, state, dcfields=None, energies=None, acfields=None):
         """Get or set the potential energies as a function of the electric field strength.
@@ -238,7 +247,8 @@ class Molecule:
             jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "dcfield", dcfields)
             jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "acfield", acfields)
             jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "dcstarkenergy", \
-            energies,comment="", atom=tables.Float64Atom(shape=(len(acfields))))
+                                        energies,comment="", atom=tables.Float64Atom(shape=(len(acfields))))
+
 
     def starkeffect_calculation(self, param):
         """Get all available energies from the given Starkeffect object and store them in our storage file."""
@@ -317,11 +327,11 @@ if __name__ == "__main__":
     param.Jmax_calc = 10
     param.Jmax_save =  5
     param.dcfields = kV_cm2V_m(num.linspace(0., 100., 11))
-    param.acfields = kV_cm2V_m(num.linspace(0.,2000.,2))
+    param.acfields = kV_cm2V_m(num.linspace(0., 2000., 2))
     param.omega = jkext.convert.dcfields2omega(param.dcfields,param.rotcon[1],param.dipole[0])
     param.deltaomega = jkext.convert.acfields2deltaomega(param.acfields,param.rotcon[1],param.polarizability[0,0])
     # save and print
-    mol = Molecule(storage="molecule.hdf")
+    mol = Molecule(storage="molecule.hdf", param=param)
     mol.starkeffect_calculation(param)
     for J in range (0, 3):
         Ka = 0

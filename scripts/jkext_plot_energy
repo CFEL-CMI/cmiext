@@ -26,7 +26,11 @@ from __future__ import division
 
 """Plot adiabatic energy curves from HDF5 files to matplotlib graph
 
-Copyright (C) 2009 Jochen Küpper"""
+Copyright (C) 2009 Jochen Küpper
+
+TODO: Add --Kmax and --Mmax
+TODO: Make --linear a shortcut for --Kmax=0
+"""
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
@@ -49,7 +53,7 @@ def test(Ka,plotK):
         return True
     else:
         return False
-    
+
 def main(args):
     try:
         opts, args = getopt.getopt(args[1:], "h", ["help", "Jmin=", "Jmax=", "lin", "plotDC", "plotAC"])
@@ -176,7 +180,7 @@ def main(args):
                             energies=energies[0,:] # we only want the dc field free states
                             if test(Ka,plotK):
                                 plt.plot(deltaomega, energies/param.rotcon[1], color)
-        
+
         # plot cos2
             plt.figure(5)
             plt.xlabel(r'$\Delta\omega$')
