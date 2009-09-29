@@ -26,6 +26,9 @@ import scipy.linalg.fblas
 import jkext.convert
 from jkext.state import State
 
+import warnings
+if 'numpy.core._dotblas' != num.dot.__module__:
+    warnings.warn('jkext.starkeffect: Your dot-product function is very slow, consider reinstalling an optimized NumPy')
 
 class CalculationParameter:
     """Container of parameters for calculation of Stark energies.
@@ -418,11 +421,7 @@ class AsymmetricRotor:
                 Wmat[self.__index(J, -K), self.__index(J, -K)] = value
             Wmat[self.__index(J, 0), self.__index(J, 0)] = 1.
         # transform Hamiltonian matrix
-        if self.__complex:
-            dot = lambda a, b: scipy.linalg.fblas.cgemm(1., a, b)
-        else:
-            dot = lambda a, b: scipy.linalg.fblas.dgemm(1., a, b)
-        hmat = dot(dot(Wmat, hmat), Wmat)
+        hmat = num.dot(num.dot(Wmat, hmat), Wmat)
         # delete Wang matrix (it's not used anymore)
         del Wmat
         # sort out matrix blocks
