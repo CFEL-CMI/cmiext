@@ -88,15 +88,19 @@ def main(args):
             min, max, steps = a.split(":")
             param.acfields = convert.kV_cm2V_m(num.linspace(float(min), float(max), int(steps)))
         elif o == "--omega":
+            import warnings
+            warnings.warn("Simple, potentially wrong approximation -- only use if you know what you are doing")
             min, max, steps = a.split(":")
             param.omega = num.linspace(float(min), float(max), int(steps))
             param.dcfields = None
         elif o == "--delta-omega":
+            import warnings
+            warnings.warn("Simple, potentially wrong approximation -- only use if you know what you are doing")
             min, max, steps = a.split(":")
             param.deltaomega = num.linspace(float(min), float(max), int(steps))
             param.acfields = None
         elif o == "--2,6-difluoro-iodobenzene":
-            # parmaters from simple ab initio calculations
+            # parameters from simple ab initio calculations (who, which level/basis set?)
             name = "2,6-difluoro-iodobenzene"
             param.watson = 'A'
             param.symmetry = 'C2a'
@@ -186,19 +190,19 @@ def main(args):
         else:
             assert False, "unhandled commandline option"
 
-    assert (None != param.omega) ^ (None != param.dcfields)
-    assert (None != param.deltaomega) ^ (None != param.acfields)
-    # This conversion has to be done after the loop over molecules in order to have the paramerters set.
+    # convert omega / deltaomega to actual fields for the specified molecule
+    assert (None != (param.omega) is not (None != param.dcfields)
+    assert (None != bool(param.deltaomega)) is not (None != param.acfields)
+    # This conversion has to be done after the loop over molecules in order to have the parameters set.
     if None == param.dcfields:
-        param.dcfields = convert.omega2dcfields(param.omega,param.rotcon[1],param.dipole[0])
+        param.dcfields = convert.omega2dcfields(param.omega, param.rotcon[1], param.dipole[0])
     if None == param.acfields:
-        param.acfields = convert.deltaomega2acfields(param.deltaomega,param.rotcon[1],param.polarizability[0,0])
+        param.acfields = convert.deltaomega2acfields(param.deltaomega, param.rotcon[1], param.polarizability[0,0])
     if None == param.M:
         param.M = range(0, param.Jmax_save+1)
 
-
     # perform calculation
-    mol = molecule.Molecule(storage=name+".hdf",param=param)
+    mol = molecule.Molecule(storage=name+".hdf", param=param)
     mol.starkeffect_calculation(param)
     # close file
     del mol
