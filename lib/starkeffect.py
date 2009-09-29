@@ -313,7 +313,7 @@ class AsymmetricRotor:
                     if 0 < blocks[sym].size:
                         eigenvalues[sym] += num.sort(num.linalg.eigvalsh(num.array(blocks[sym]))).tolist()
             # sort assignments according to energy
-            if 'V' == self.__symmetry:
+            if 'V' == self.__symmetry or (None == self.__symmetry and 0 == self.__M):
                 symmetries = ['A', 'Ba', 'Bb', 'Bc']
             elif 'C2a' == self.__symmetry:
                 eigenvalues['Aa'] = eigenvalues['A'] + eigenvalues['Ba']
@@ -339,7 +339,7 @@ class AsymmetricRotor:
                 symmetries = ['N']
             else:
                 raise NotImplementedError("Hamiltonian symmetry %s not implemented" % (self.__symmetry, ))
-            if 'V' != self.__symmetry:
+            if not ('V' == self.__symmetry or (None == self.__symmetry and 0 == self.__M)):
                 # free unused memories
                 del label['A'], label['Ba'], label['Bb'], label['Bc']
             for sym in symmetries:
@@ -375,8 +375,8 @@ class AsymmetricRotor:
         if 'N' == symmetry:
             # nothing to do, return
             blocks['N'] = hmat
-        elif symmetry == 'V':
-            # full Fourgroup symmetry (field free Hamiltonian)
+        elif  'V' == symmetry or (None != symmetry and 0 == self.__M):
+            # full Fourgroup symmetry (field free Hamiltonian or M = 0 for dipole along principal axis)
             # I^r representation, Wang transformed Hamiltonian factorizes into four submatrices E-, E+, O-, O+,
             # or, as used here, A, Ba, Bb, Bc -- in calculation for a single J this is the same.
             idx = {'A': [], 'Ba': [], 'Bb': [], 'Bc': []}
@@ -513,7 +513,7 @@ if __name__ == "__main__":
     for M in p.M:
         for field in jkext.convert.kV_cm2V_m((0., 1., 100.)):
             print "\nM = %d, field strength = %.0f kV/cm" % (M, jkext.convert.V_m2kV_cm(field))
-            top = AsymmetricRotor(p, M, 0., field)
+            top = AsymmetricRotor(p, M, field)
             for state in [State(0, 0, 0, M, p.isomer),
                           State(1, 0, 1, M, p.isomer), State(1, 1, 1, M, p.isomer), State(1, 1, 0, M, p.isomer),
                           State(2, 0, 2, M, p.isomer), State(2, 1, 2, M, p.isomer), State(2, 1, 1, M, p.isomer),
