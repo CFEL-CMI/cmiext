@@ -1,7 +1,7 @@
 # -*- coding: utf-8; fill-column: 120 -*-
 #
 # This file is part of JK Python extensions
-# Copyright (C) 2008 Jochen Küpper <software@jochen-kuepper.de>
+# Copyright (C) 2008,2009 Jochen Küpper <software@jochen-kuepper.de>
 #
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
@@ -36,4 +36,4 @@ except ImportError:
     plancks_constant_h = 6.6260689599999996e-34
     speed_of_light = 299792458.
     unified_atomic_mass = 1.6605387820000001e-27
-    vacuum_permittivity = 8.854187817e-12
+    vacuum_permittivity = 8.8541878170000005e-12
