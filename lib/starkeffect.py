@@ -39,6 +39,7 @@ class CalculationParameter:
     General parameters:
     - type: specify the type of rotor, currently only 'A' is implemented.
       - 'A': asymmetric top
+      - 'S': symmetric top
 
     The following parameter are used for an asymmetric top:
     - M, Jmin, Jmax_calc, Jmax_save
@@ -77,11 +78,21 @@ class AsymmetricRotor:
 
     This object will calculate rotational energies at the specified AC and DC field strength for the given M-value and
     J-range and all K's.
+
+    |__polarizability| This is the full polarizability tensor in the principal axes of inertia system
+    However, for now we assume that the polarizaility tensor is diagonal in that axis system!
+
+    |__symmetry| Symmetry of Hamiltonian, possible values: 'N', 'C2a', 'C2b', 'C2c', 'V').
+    Field free calculations are always performed under Fourgroup ('V') symmetry.
+
+    ToDo: Implement arbitrary angles between principal axes of inertia and polarizability.
     """
 
     def __init__(self, param, M, acfield=0., dcfield=0.):
         """Save the relevant parameters"""
         assert 'A' == param.type.upper()
+        assert type(int(M)) == type(M)
+        assert type(int(param.isomer)) == type(param.isomer)
         # we have not yet calculated the correct energies - mark invalid
         self.__valid = False
         self.__stateorder_valid = False
@@ -91,12 +102,12 @@ class AsymmetricRotor:
         self.__rotcon = num.array(param.rotcon, num.float64)
         self.__quartic = num.array(param.quartic, num.float64)
         self.__dipole = num.array(param.dipole, num.float64)
-        self.__polarizability = num.array(param.polarizability, num.float64) # full tensor, but only principal moments of polarizability used!
+        self.__polarizability = num.array(param.polarizability, num.float64)
         self.__watson = param.watson
-        self.__symmetry = param.symmetry # symmetry of Hamiltonian (possible values: 'N', 'C2a', 'C2b', 'C2c', 'V')
+        self.__symmetry = param.symmetry
         self.__type = param.type
         # save quantum numbers
-        self.__M = int(M) # use the single spefied M
+        self.__M = int(M) # use the single specified M
         self.__isomer = int(param.isomer)
         self.__Jmin = self.__M # this must be equal to self.__M (in Stark calculation all J couple)
         self.__Jmax = int(param.Jmax_calc)
