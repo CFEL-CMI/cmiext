@@ -11,8 +11,8 @@ See License for details.
 * Prerequisites
 
 The extension package rests on the shoulders of giants, i.e., you need
-a recent Python 2.x system and some other important Python packages,
-including (but not necessarily limited to)
+a recent Python 2.x (x >= 5) system and some other important Python
+packages, including (but not necessarily limited to)
   - numpy
   - pytables
 
