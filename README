@@ -15,9 +15,10 @@ a recent Python 2.x (x >= 5) system and some other important Python
 packages, including (but not necessarily limited to)
   - numpy
   - pytables
-
 These requirements can all be met by using the Enthought Python
 Distribution, for example.
+
+In addition, a recent GSL library is needed.
 
 
 * Installation
