@@ -20,11 +20,12 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 """Rotation routines"""
 
+
 import scipy as num
 
 
 def rotation_matrix(axis, angle):
-    """Create 3D rotation matrix for rotation of |angle| around the space-fixed |axis| (x, y, z)."""
+    """Create 3D rotation matrix for rotation of |angle| around the space-fixed |axis| (X, Y, Z)."""
     from math import cos, sin
     from scipy import array
     if 'x' == axis:
@@ -43,8 +44,8 @@ def rotation_matrix(axis, angle):
         raise "impossible axis specified"
 
 
-def euler2cartesian(alpha, beta, gamma):
-    """Conversion from Euler angles to cartesian coordinates -- not correct!
+def euler_rotation_matrix(alpha, beta, gamma):
+    """Rotation matrix for conversion from Euler angles to cartesian coordinates
 
     Calculate the cartesian vector resulting from applying the specified Euler angles to the (0, 0, 1) unit vector.
 
@@ -62,40 +63,49 @@ def euler2cartesian(alpha, beta, gamma):
     * Rotate the xyz-system a third time about the new z-axis by gamma.
     """
     from scipy import array, dot
-    Z = num.array((0., 0., 1.), dtype=num.float64)
     R1 = rotation_matrix('z', alpha)
     R2 = rotation_matrix('x', beta)
     R3 = rotation_matrix('z', gamma)
-    return num.dot(R3, num.dot(R2, num.dot(R1, Z)))
+    return dot(R3, dot(R2, R1))
 
 
-def euler2polar(alpha, beta, gamma):
+def euler2cartesian(vec, alpha, beta, gamma):
+    """Rotate |vec| through Euler angles into new orientation"""
+    return num.dot(euler_rotation_matrix(alpha, beta, gamma), vec)
+
+
+def polar(vec):
     """Conversion from Euler angles to spherical polar coordinates.
 
     This converts uses euler2cartesian and then converts from cartesian to polar system.
     Returns r, theta, phi (angles in radians)"""
-    from math import atan
-    a = euler2cartesian(alpha, beta, gamma)
-    r = (a[0]**2 + a[1]**2 + a[2]**2)**(1/2)
-    theta = atan((a[0]**2+a[1]**2)**(1/2) / a[2])
-    phi = atan(a[1] / a[0])
-    return num.array((r, theta, phi))
+    from math import atan2, acos, sqrt
+    from numpy import array
+    r = sqrt(dot(vec, vec))
+    phi = atan2(vec[1], vec[0])
+    theta = acos(vec[2] / r)
+    return array((r, theta, phi))
 
 
-def euler2polardegree(alpha, beta, gamma):
+def polardegree(vec):
     """Conversion from Euler angles to spherical polar coordinates.
 
     Uses euler2polar, returns r, theta, phi (angles in degrees)"""
-    return euler2polar(alpha, beta, gamma) * num.array((1, num.degrees(1), num.degrees(1)))
+    from scipy import degrees
+    return polar(vec) * num.array((1, degrees(1), degrees(1)))
 
 
 # some simple tests
 if __name__ == "__main__":
     from math import pi
+    from scipy import array
     print "\n\n"
-    print euler2polardegree(0, pi/2, 0)
-    print euler2polardegree(0, 0.1, 0.1)
-    #
-    print euler2cartesian(0, pi/2, 0)
-    print euler2cartesian(pi/2, 0, 0)
-    print euler2cartesian(0, pi, 0)
+    print euler2cartesian(array((0.,0.,1.)), 0, 0, 0)
+    print euler2cartesian(array((0.,0.,1.)), 0, pi/2, 0)
+    print euler2cartesian(array((0.,0.,1.)), 0, pi/2, pi/2)
+    print
+    print euler2cartesian(array((1.,0.,0.)), 0, 0, 0)
+    print euler2cartesian(array((1.,0.,0.)), pi/2, 0, 0)
+    print euler2cartesian(array((1.,0.,0.)), 0, pi/2, 0)
+    print euler2cartesian(array((1.,0.,0.)), 0, 0, pi/2)
+    print euler2cartesian(array((1.,0.,0.)), 0, pi/2, pi/2)
