@@ -262,7 +262,7 @@ class Molecule:
                         for state in calc.states():
                             id = state.id()
                             if energies.has_key(id):
-                                energies[id]=num.append(energies[id],calc.energy(state))
+                                energies[id] = num.append(energies[id], calc.energy(state))
                             else:
                                 energies[id] = num.array((calc.energy(state),))
                 # store calculated values for this M
@@ -277,6 +277,8 @@ class Molecule:
         """Merge the specified pairs of field strength and Stark energies into the existing data.
 
         not really tested
+        TODO reimplement this will require a 2D matrix merge function need to handle 
+        non uniform natrix sizes. apend in one or the other direction.
         """
         assert len(newdcfields)*len(newacfields)  == len(newenergies)
         reshapedenergies = num.reshape(newenergies,(len(newdcfields),len(newacfields)))

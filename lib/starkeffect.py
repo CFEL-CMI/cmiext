@@ -60,6 +60,7 @@ class CalculationParameter:
     Jmax_calc = 5
     Jmax_save = 2
     isomer = 0
+    saveevec = True
     # fields
     acfields = num.zeros((1,), num.float64)
     dcfields = jkext.convert.kV_cm2V_m(num.array((0, 100.), num.float64))
@@ -106,6 +107,7 @@ class AsymmetricRotor:
         self.__watson = param.watson
         self.__symmetry = param.symmetry
         self.__type = param.type
+        self.__saveevec = param.saveevec
         # save quantum numbers
         self.__M = int(M) # use the single specified M
         self.__isomer = int(param.isomer)
@@ -171,15 +173,29 @@ class AsymmetricRotor:
     def __recalculate(self):
         """Perform calculation of rotational state energies for current parameters"""
         self.__levels = {}
+        self.__vectors = {}
         blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__acfield, self.__dcfield, self.__symmetry)
         for symmetry in blocks.keys():
-            eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate only energies
-            eval = num.sort(eval)
-            i = 0
-            for state in self.__stateorder(symmetry):
-                if state.J() <= self.__Jmax_save:
-                    self.__levels[state.id()] = eval[i]
-                i += 1
+            if self.__saveevec == False:
+                eval = num.linalg.eigvalsh(blocks[symmetry]) # calculate only energies
+                eval = num.sort(eval)
+                i = 0
+                for state in self.__stateorder(symmetry):
+                    if state.J() <= self.__Jmax_save:
+                        self.__levels[state.id()] = eval[i]
+                    i += 1
+            elif self.__saveevec == True:
+                eval,evec = num.linalg.eigh(blocks[symmetry]) #evec is an array of the eigenvectors 
+                eval = num.sort(eval)#evec[:,i] is the eigenvector corosponding to eval[i]
+                evec[:,] = evec[:,num.argsort(eval)] # sort acording to the eigen values
+                i = 0
+                for state in self.__stateorder(symmetry):
+                    if state.J() <= self.__Jmax_save:
+                        self.__levels[state.id()] = eval[i]
+                        self.__vectors[state.id()] = evec[:,i]
+                    i += 1
+            else:
+                print "You must chose eigenvectors or no eigenvectors"
         # done - data is now valid
         self.__valid = True
 
@@ -595,8 +611,7 @@ if __name__ == "__main__":
                            top.energy(state))
     for M in p.M:
         for acfield in (0., 2.69e9, 2.7e9):
-            print "\nM = %d, field strength = %.0f kV/cm" % (M, jkext.convert.V_m2kV_cm(acfield))
-            print acfield
+            print "\nM = %d, ac field strength = %.0f V/m" % (M, acfield)
             top = AsymmetricRotor(p, M, acfield, 0.)
             for state in [State(0, 0, 0, M, p.isomer),
                           State(1, 0, 1, M, p.isomer), State(1, 1, 1, M, p.isomer), State(1, 1, 0, M, p.isomer),
