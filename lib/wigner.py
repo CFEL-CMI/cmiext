@@ -18,22 +18,9 @@
 from __future__ import division
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
-__doc__ = """Implementation of Wigner 3j, 6j, 9j symbols and reduced rotation matrixes.
+__doc__ = """Implementation of Wigner d reduced rotation matrix.
 
 Based on the wigner GSL extension module by Jonathan Underwood.
 """
 
-
-import ctypes
-import ctypes.util
-
-cwigner_filename = ctypes.util.find_library("jkext._wigner.so")
-cwigner = ctypes.CDLL(cwigner_filename)
-
-
-def wigner_drot (j, m1, m2, theta):
-    """Reduced Wigner rotation matrix."""
-    result = ctypes.c_double()
-    status = cwigner.gsl_sf_wigner_drot_e(j, m1, m2, ctypes.c_double(theta), ctypes.byref(result))
-    assert 0 == status, """Error in gsl_sf_wigner_drot_e C function."""
-    return result
+from jkext._wigner import drot
