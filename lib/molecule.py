@@ -194,17 +194,17 @@ class Molecule:
         return fields, mueff
 
     def coshellmann(self, state,param):
-        """Get the effective dipole moment \mu_eff as a function of the electric field strength.
-
-        Return the effective dipole moment curve for the specified quantum |state|.
+        """Get the the expectation value of cos theta using the Hellmann Feynman teorem.
+        as a function of the electric field strength.
+        this is right now only right for linar molecules
+        this needs to be extended to different ac fields
         """
         dcfields, energies, acfields = self.starkeffect(state)
         omega=convert.dcfields2omega(dcfields,param.rotcon[1],param.dipole[0])
-        energies = energies[:,0]
+        energies = energies[:,0] # chose one ac field
         assert len(omega) == len(energies)
         cos = num.zeros((len(dcfields),), num.float64)
         cos[1:-1] = -1 * (energies[0:-2]/param.rotcon[1] - energies[2:]/param.rotcon[1]) / (omega[0:-2] - omega[2:])
-        # we are missing a omega_perp but here it is zero anyway
         cos[0] = 0
         cos[-1] = cos[-2]
         return dcfields, cos
@@ -212,12 +212,13 @@ class Molecule:
 
 
     def cos2hellmann(self, state,param):
-        """Get the effective dipole moment \mu_eff as a function of the electric field strength.
-
-        Return the effective dipole moment curve for the specified quantum |state|.
+        """Get the the expectation value of cos^2 theta using the Hellmann Feynman teorem.
+        as a function of the electric field strength.
+        this is right now only right for linar molecules
+        this needs to be more robust and extented to different dc fields.
         """
         dcfields, energies, acfields = self.starkeffect(state)
-        energies = energies[0,:] #only get the first energies(most likely dc field free)
+        energies = energies[0,:] #only get the first energies
         assert len(acfields) == len(energies)
         cos2 = num.zeros((len(acfields),), num.float64)
         cos2[1:-1] = -(energies[0:-2]- energies[2:]+1/8*(param.polarizability[1,1]+param.polarizability[2,2])* \
