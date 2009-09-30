@@ -191,8 +191,8 @@ def main(args):
             assert False, "unhandled commandline option"
 
     # convert omega / deltaomega to actual fields for the specified molecule
-    assert (None != bool(param.omega)) is not (None != param.dcfields)
-    assert (None != bool(param.deltaomega)) is not (None != param.acfields)
+    assert (None != param.omega) is not (None != param.dcfields)
+    assert (None != param.deltaomega) is not (None != param.acfields)
     # This conversion has to be done after the loop over molecules in order to have the parameters set.
     if None == param.dcfields:
         param.dcfields = convert.omega2dcfields(param.omega, param.rotcon[1], param.dipole[0])
