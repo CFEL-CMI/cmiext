@@ -5,7 +5,7 @@
 
 
 import os
-from distutils.core import setup
+from distutils.core import setup, Extension
 
 extra_compile_args = []
 library_dirs = []
@@ -29,6 +29,8 @@ setup(name="jkext",
       long_description    = long_description,
       package_dir         = {'jkext': 'lib'},
       packages            = ['jkext'],
+      ext_modules         = [Extension('jkext._wigner', ['src/wigner.c'],
+                                       libraries=['gsl', 'gslcblas'])],
       scripts             = ['scripts/jkext_brute-force-orientation',
                              'scripts/jkext_calculate_energy',
                              'scripts/jkext_plot_energy',
