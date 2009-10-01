@@ -233,8 +233,8 @@ class Molecule:
         acfielddir = "_"+replace(str(acfield),'.','d') # we use the nameing convension 
         # _somenumberdsomeothernumber for the where d replaces . as hdf doesnt like . and groups that start with _ 
         if energies == None and dcfields == None:
-            return jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + acfielddir + "/dcfield"), \
-                   jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + acfielddir + "/dcstarkenergy")
+            return jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/" + acfielddir + "/dcfield"), \
+                   jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/" + acfielddir + "/dcstarkenergy")
         elif energies == None or dcfields == None:
             raise SyntaxError
         else:
@@ -279,7 +279,7 @@ class Molecule:
             acfield = newacfields[f]
             try:
                 olddcfields, oldenergies = self.starkeffect(state,acfield=acfield)
-                dcfields, energies = jkext.util.column_merge([olddcfields, oldenergies], [newdcfields, newenergie])
+                dcfields, energies = jkext.util.column_merge([olddcfields, oldenergies], [newdcfields, newenergies])
             except tables.exceptions.NodeError:
                 dcfields = newdcfields
                 energies = reshapedenergies[:,f]
@@ -322,7 +322,7 @@ if __name__ == "__main__":
     param.Jmax_calc = 10
     param.Jmax_save =  5
     param.dcfields = kV_cm2V_m(num.linspace(0., 100., 11))
-    param.acfields = kV_cm2V_m(num.linspace(0., 2000., 2))
+    param.acfields = num.linspace(0., 2000., 2)
     param.omega = jkext.convert.dcfields2omega(param.dcfields,param.rotcon[1],param.dipole[0])
     param.deltaomega = jkext.convert.acfields2deltaomega(param.acfields,param.rotcon[1],param.polarizability[0,0])
     # save and print
@@ -332,10 +332,14 @@ if __name__ == "__main__":
         Ka = 0
         for Kc in range(J, -1, -1):
             state = State(J, Ka, Kc, 0, 0)
-            dcfields, energies, acfields = mol.starkeffect(state)
-            print state.name(), V_m2kV_cm(dcfields), V_m2kV_cm(acfields), "\n", J2Hz(energies) / 1e6
+            for i in range(len(param.acfields)):
+                acfield = param.acfields[i]
+                dcfields, energies = mol.starkeffect(state,acfield=acfield)
+                print state.name(), V_m2kV_cm(dcfields), acfield, "\n", J2Hz(energies) / 1e6
             if Kc > 0:
                 Ka += 1
                 state = State(J, Ka, Kc, 0, 0)
-                dcfields, energies, acfields = mol.starkeffect(state)
-                print state.name(), V_m2kV_cm(dcfields), V_m2kV_cm(acfields), "\n", J2Hz(energies) / 1e6
+                for i in range(len(param.acfields)):
+                    acfield = param.acfields[i]
+                    dcfields, energies  = mol.starkeffect(state,acfield=acfield)
+                    print state.name(), V_m2kV_cm(dcfields), acfield, "\n", J2Hz(energies) / 1e6
