@@ -24,6 +24,7 @@ import numpy.linalg
 import const
 import convert
 import tables
+from string import replace
 import jkext.hdf5, jkext.starkeffect, jkext.util, jkext.convert
 from jkext.state import State
 
@@ -128,15 +129,6 @@ class Molecule:
         plt.plot(self.positions[:,0], self.positions[:,1], 'o')
         plt.show()
 
-    def weight(self,param,Jmax,T):
-        """returns the boltzmann weight of all states up to Jmax only for linear molecules now"""
-        J = num.arange(Jmax)
-        w = num.exp(-param.rotcon[1]*J*(J+1)/(T*const.boltzmann+1e-100))
-        wg = (2*J+1)*w
-        Z = sum(wg)
-        w = w/Z
-        return w
-
     def principal_axis_of_inertia(self):
         """Calulate principal axes of inertia and the corresponding rotational constants.
 
@@ -229,7 +221,7 @@ class Molecule:
         return acfields, cos2
 
 
-    def starkeffect(self, state, dcfields=None, energies=None, acfields=None):
+    def starkeffect(self, state, dcfields=None, energies=None, acfield=None):
         """Get or set the potential energies as a function of the electric field strength.
 
         When |energies| and |fields| are None, return the Stark curve for the specified quantum state.
@@ -237,18 +229,18 @@ class Molecule:
         When |energies| and |fields| are specified, save the Stark curve for the specified quantum state in the
         Molecule's HDF5 storage file.
         """
-        if energies == None and dcfields == None and acfields == None:
-            return jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/dcfield"), \
-                   jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/dcstarkenergy"), \
-                   jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/acfield")
-        elif energies == None or dcfields == None or acfields == None:
+        assert acfield != None
+        acfielddir = "_"+replace(str(acfield),'.','d') # we use the nameing convension 
+        # _somenumberdsomeothernumber for the where d replaces . as hdf doesnt like . and groups that start with _ 
+        if energies == None and dcfields == None:
+            return jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + acfielddir + "/dcfield"), \
+                   jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + acfielddir + "/dcstarkenergy")
+        elif energies == None or dcfields == None:
             raise SyntaxError
         else:
-            assert len(dcfields) == energies.shape[0] and  len(acfields) == energies.shape[1]
-            jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "dcfield", dcfields)
-            jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "acfield", acfields)
-            jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname(), "dcstarkenergy", \
-                                        energies,comment="", atom=tables.Float64Atom(shape=(len(acfields))))
+            assert len(dcfields) == len(energies)
+            jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname()+ "/"  + acfielddir , "dcfield", dcfields)
+            jkext.hdf5.writeVLArray(self.__storage, "/" + state.hdfname()+ "/"  + acfielddir , "dcstarkenergy", energies)
 
 
     def starkeffect_calculation(self, param):
@@ -274,25 +266,25 @@ class Molecule:
 
 
     def starkeffect_merge(self, state, newdcfields=None, newenergies=None, newacfields=None):
-        """Merge the specified pairs of field strength and Stark energies into the existing data.
-
+        """Merge the specified pairs of field strength and Stark energies into the existing data
+.
         not really tested
         TODO reimplement this will require a 2D matrix merge function need to handle 
         non uniform natrix sizes. apend in one or the other direction.
+        TODO we need to improve the test for the exsistense of calculations at this ac field already !
         """
         assert len(newdcfields)*len(newacfields)  == len(newenergies)
         reshapedenergies = num.reshape(newenergies,(len(newdcfields),len(newacfields)))
-        #try:
-         #   olddcfields, oldenergies, oldacfields = self.starkeffect(state)
-          #  dcfields, energies = jkext.util.column_merge([olddcfields, oldenergies], [newdcfields, newenergies])
-           # acfields = newacfields
-            #print "no node error"
-        #except tables.exceptions.NodeError:
-        if 1>0: # removed merge for now as it is not used and doesn't work with 2 dim energi matrix
-            dcfields = newdcfields
-            energies = reshapedenergies
-            acfields = newacfields
-        self.starkeffect(state, dcfields, energies, acfields)
+        for f in range(len(newacfields)):
+            acfield = newacfields[f]
+            try:
+                olddcfields, oldenergies = self.starkeffect(state,acfield=acfield)
+                dcfields, energies = jkext.util.column_merge([olddcfields, oldenergies], [newdcfields, newenergie])
+            except tables.exceptions.NodeError:
+                dcfields = newdcfields
+                energies = reshapedenergies[:,f]
+                assert len(energies) == len(dcfields)
+            self.starkeffect(state, dcfields, energies, acfield=acfield)
 
     def starkeffect_states(self):
         """Get a list of states for which we know the Stark effect."""

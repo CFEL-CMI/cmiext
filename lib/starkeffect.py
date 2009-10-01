@@ -138,6 +138,19 @@ class AsymmetricRotor:
         return self.__levels[state.id()]
 
 
+    def eigvectors(self, state):
+        """Return Eigenvectors for |state|
+
+        todo maybe we should just set the param and recalculate if it is set to false """
+        if self.__saveevec == True:
+            if self.__valid == False:
+                self.__recalculate()
+            return self.__vectors[state.id()]
+        else:
+            print "You must turn on eigvector calculation using param.saveevec"
+            return None
+
+
     def field_AC(self):
         """Return AC field for which the Stark energies were calculated."""
         return self.__acfield
