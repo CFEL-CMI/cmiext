@@ -92,21 +92,22 @@ class Molecule:
     def __saveparam(self, param):
         """Store all relevant calculation parameters.
 
-        TODO: Needs to be per-isomer!"""
-        jkext.hdf5.writeVLArray(self.__storage, "/param", "dipole", param.dipole)
-        jkext.hdf5.writeVLArray(self.__storage, "/param", "polarizability", param.polarizability,\
-                                atom=tables.Float64Atom(shape=(3)))
-        jkext.hdf5.writeVLArray(self.__storage, "/param", "rotcon", param.rotcon)
+        """
+        jkext.hdf5.writeVLArray(self.__storage, "/param" + "/_" + str(param.isomer) , "dipole", param.dipole)
+        jkext.hdf5.writeVLArray(self.__storage, "/param" + "/_" + str(param.isomer) , "polarizability", \
+                                param.polarizability,atom=tables.Float64Atom(shape=(3)))
+        jkext.hdf5.writeVLArray(self.__storage, "/param" + "/_" + str(param.isomer) , "rotcon", param.rotcon)
 
 
     def getparam(self, param):
         """Retrieve stored calculation parameters.
 
-        TODO: Needs to be per-isomer!
+        TODO: We might need to be more cleaver about the isomer stuff here. 
         TODO: non private?"""
-        param.dipole=jkext.hdf5.readVLArray(self.__storage, "/param"+ "/dipole")
-        param.polarizability=jkext.hdf5.readVLArray(self.__storage, "/param" + "/polarizability")
-        param.rotcon=jkext.hdf5.readVLArray(self.__storage, "/param"+ "/rotcon")
+        param.dipole=jkext.hdf5.readVLArray(self.__storage, "/param" + "/_" + str(param.isomer) + "/dipole")
+        param.polarizability=jkext.hdf5.readVLArray(self.__storage, \
+                                                    "/param/" + "/_" + str(param.isomer) + "/polarizability")
+        param.rotcon=jkext.hdf5.readVLArray(self.__storage, "/param/" + "/_" + str(param.isomer) + "/rotcon")
 
 
     def __update(self):
