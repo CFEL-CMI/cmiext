@@ -98,16 +98,22 @@ class Molecule:
                                 param.polarizability,atom=tables.Float64Atom(shape=(3)))
         jkext.hdf5.writeVLArray(self.__storage, "/param" + "/_" + str(param.isomer) , "rotcon", param.rotcon)
 
-
-    def getparam(self, param):
+        
+    def __loadparam(self, param):
         """Retrieve stored calculation parameters.
 
         TODO: We might need to be more cleaver about the isomer stuff here. 
-        TODO: non private?"""
+        """
         param.dipole=jkext.hdf5.readVLArray(self.__storage, "/param" + "/_" + str(param.isomer) + "/dipole")
         param.polarizability=jkext.hdf5.readVLArray(self.__storage, \
                                                     "/param/" + "/_" + str(param.isomer) + "/polarizability")
         param.rotcon=jkext.hdf5.readVLArray(self.__storage, "/param/" + "/_" + str(param.isomer) + "/rotcon")
+
+    def getparam(self, param):
+        """Retrieve stored calculation parameters.
+        Non privat wrapper
+        """
+        self.__loadparam(param)
 
 
     def __update(self):
@@ -344,3 +350,4 @@ if __name__ == "__main__":
                     acfield = param.acfields[i]
                     dcfields, energies  = mol.starkeffect(state,acfield=acfield)
                     print state.name(), V_m2kV_cm(dcfields), acfield, "\n", J2Hz(energies) / 1e6
+    mol.getparam(param)
