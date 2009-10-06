@@ -187,6 +187,7 @@ class AsymmetricRotor:
         """Perform calculation of rotational state energies for current parameters"""
         self.__levels = {}
         self.__vectors = {}
+        self.__statesymmetry = {}
         blocks = self.__full_hamiltonian(self.__Jmin, self.__Jmax, self.__acfield, self.__dcfield, self.__symmetry)
         for symmetry in blocks.keys():
             if self.__saveevec == False:
@@ -206,6 +207,7 @@ class AsymmetricRotor:
                     if state.J() <= self.__Jmax_save:
                         self.__levels[state.id()] = eval[i]
                         self.__vectors[state.id()] = evec[:,i]
+                        self.__statesymmetry = symmetry
                     i += 1
             else:
                 print "You must chose eigenvectors or no eigenvectors"
