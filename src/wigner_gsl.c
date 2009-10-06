@@ -31,7 +31,7 @@ coupling.c. */
 #include "error.h"
 #include "eval.h"
 
-#include "wigner.h"
+#include "wigner_gsl.h"
 
 /* Static prototypes. */
 static int istriangle (const int two_ja, const int two_jb, const int two_jc);

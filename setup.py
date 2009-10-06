@@ -5,7 +5,7 @@
 
 
 import os
-from distutils.core import setup, Extension
+from numpy.distutils.core import setup, Extension
 
 extra_compile_args = []
 library_dirs = []
@@ -29,8 +29,19 @@ setup(name="jkext",
       long_description    = long_description,
       package_dir         = {'jkext': 'lib'},
       packages            = ['jkext'],
-      ext_modules         = [Extension('jkext._wigner', ['src/wigner.c', 'src/_wigner.c'],
-                                       libraries=['gsl', 'gslcblas'])],
+      ext_modules         = [Extension('jkext._wigner_gsl',
+                                       sources = ['src/wigner_gsl.c', 'src/wigner_gsl_module.c'],
+                                       libraries = ['gsl', 'gslcblas']),
+                             Extension('jkext._wigner_avda',
+                                       sources = ['src/wigner_avda.f',],
+                                       extra_link_args = ['-bundle'],
+                                       libraries = ['python2.6']),
+                             # Extension('jkext._wigner_fft',
+                             #           sources = ['src/wigner_fft.f'],
+                             #           extra_compile_args = ['-bundle', '-ffixed-line-length-none'],
+                             #           include_dirs = ['/opt/local/include'],
+                             #           libraries = ['python2.6']),
+                             ],
       scripts             = ['scripts/jkext_brute-force-orientation',
                              'scripts/jkext_calculate_energy',
                              'scripts/jkext_plot_energy',

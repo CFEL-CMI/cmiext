@@ -23,4 +23,7 @@ __doc__ = """Implementation of Wigner d reduced rotation matrix.
 Based on the wigner GSL extension module by Jonathan Underwood.
 """
 
-from jkext._wigner import drot
+from jkext._wigner_gsl import drot as drot_gsl
+from jkext._wigner_avda import djm as drot_avda
+
+drot = drot_avda
