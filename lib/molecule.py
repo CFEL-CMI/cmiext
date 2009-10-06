@@ -350,4 +350,3 @@ if __name__ == "__main__":
                     acfield = param.acfields[i]
                     dcfields, energies  = mol.starkeffect(state,acfield=acfield)
                     print state.name(), V_m2kV_cm(dcfields), acfield, "\n", J2Hz(energies) / 1e6
-    mol.getparam(param)
