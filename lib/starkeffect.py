@@ -60,7 +60,7 @@ class CalculationParameter:
     Jmax_calc = 5
     Jmax_save = 2
     isomer = 0
-    saveevec = True
+    saveevec = False
     # fields
     acfields = num.zeros((1,), num.float64)
     dcfields = jkext.convert.kV_cm2V_m(num.array((0, 100.), num.float64))
@@ -620,6 +620,7 @@ if __name__ == "__main__":
     p.polarizability[2,2] = jkext.convert.A32CM2_V(10.2)
     p.watson = 'A'
     p.symmetry = 'C2a'
+    p.saveevec = True
     for M in p.M:
         for dcfield in jkext.convert.kV_cm2V_m((0., 1., 100.)):
             print "\nM = %d, field strength = %.0f kV/cm" % (M, jkext.convert.V_m2kV_cm(dcfield))
