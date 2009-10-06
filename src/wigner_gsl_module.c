@@ -26,7 +26,7 @@ static PyObject *_wigner_drot(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "iiid", &j, &m1, &m2, &theta))
         return NULL;
     gsl_set_error_handler_off();
-    if(status = gsl_sf_wigner_drot_e(j, m1, m2, theta, &result)) {
+    if(GSL_SUCCESS != (status = gsl_sf_wigner_drot_e(j, m1, m2, theta, &result))) {
         /* error */
         PyErr_SetString(PyExc_RuntimeError, "GSL error in gsl_sf_wigner_drot_e");
     }
@@ -42,7 +42,7 @@ static PyObject *_wigner_drot_e(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "iiid", &j, &m1, &m2, &theta))
         return NULL;
     gsl_set_error_handler_off();
-    if(status = gsl_sf_wigner_drot_e(j, m1, m2, theta, &result)) {
+    if(GSL_SUCCESS != (status = gsl_sf_wigner_drot_e(j, m1, m2, theta, &result))) {
         /* error */
         PyErr_SetString(PyExc_RuntimeError, "GSL error in gsl_sf_wigner_drot_e");
     }
