@@ -149,7 +149,18 @@ class AsymmetricRotor:
         else:
             print "You must turn on eigvector calculation using param.saveevec"
             return None
+        
+    def symmetry(self,state):
+        """Return (reduced) wang symmetry for |state|
 
+        todo maybe we should just set the param and recalculate if it is set to false """
+        if self.__saveevec == True:
+            if self.__valid == False:
+                self.__recalculate()
+            return self.__statesymmetry[state.id()]
+        else:
+            print "You must turn on eigvector calculation using param.saveevec"
+            return None
 
     def field_AC(self):
         """Return AC field for which the Stark energies were calculated."""
@@ -207,7 +218,7 @@ class AsymmetricRotor:
                     if state.J() <= self.__Jmax_save:
                         self.__levels[state.id()] = eval[i]
                         self.__vectors[state.id()] = evec[:,i]
-                        self.__statesymmetry = symmetry
+                        self.__statesymmetry[state.id()] = symmetry
                     i += 1
             else:
                 print "You must chose eigenvectors or no eigenvectors"
@@ -608,7 +619,7 @@ if __name__ == "__main__":
     p.polarizability[1,1] = jkext.convert.A32CM2_V(15.3)
     p.polarizability[2,2] = jkext.convert.A32CM2_V(10.2)
     p.watson = 'A'
-    p.symmetry = 'N'
+    p.symmetry = 'C2a'
     for M in p.M:
         for dcfield in jkext.convert.kV_cm2V_m((0., 1., 100.)):
             print "\nM = %d, field strength = %.0f kV/cm" % (M, jkext.convert.V_m2kV_cm(dcfield))
@@ -621,9 +632,9 @@ if __name__ == "__main__":
                           State(3, 2, 2, M, p.isomer), State(3, 2, 1, M, p.isomer), State(3, 3, 1, M, p.isomer),
                           State(3, 3, 0, M, p.isomer)]:
                 if state.M() <= state.J() and state.J() <= p.Jmax_save:
-                    print state.name(), "%12.3f MHz %8.3f cm-1 %10.3g J" \
+                    print state.name(), "%12.3f MHz %8.3f cm-1 %10.3g J Symmetry %s" \
                         % (jkext.convert.J2MHz(top.energy(state)), jkext.convert.J2invcm(top.energy(state)),
-                           top.energy(state))
+                           top.energy(state),top.symmetry(state))
     for M in p.M:
         for acfield in (0., 2.69e9, 2.7e9):
             print "\nM = %d, ac field strength = %.0f V/m" % (M, acfield)
@@ -636,6 +647,6 @@ if __name__ == "__main__":
                           State(3, 2, 2, M, p.isomer), State(3, 2, 1, M, p.isomer), State(3, 3, 1, M, p.isomer),
                           State(3, 3, 0, M, p.isomer)]:
                 if state.M() <= state.J() and state.J() <= p.Jmax_save:
-                    print state.name(), "%12.3f MHz %8.3f cm-1 %10.3g J" \
+                    print state.name(), "%12.3f MHz %8.3f cm-1 %10.3g J Symmetry %s" \
                         % (jkext.convert.J2MHz(top.energy(state)), jkext.convert.J2invcm(top.energy(state)),
-                           top.energy(state))
+                           top.energy(state),top.symmetry(state))
