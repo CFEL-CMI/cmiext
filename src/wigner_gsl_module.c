@@ -14,15 +14,17 @@ Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, U
 */
 
 #include <Python.h>
-#include "wigner.h"
+#include "wigner_gsl.h"
 
 static PyObject *_wigner_drot(PyObject *self, PyObject *args)
 {
-    int j, m1, m2;
+    int j, m1, m2, status;
     double theta, result;
     if (!PyArg_ParseTuple(args, "iiid", &j, &m1, &m2, &theta))
         return NULL;
-    result = gsl_sf_wigner_drot(j, m1, m2, theta);
+    if(status = gsl_sf_wigner_drot_e(j, m1, m2, theta, &results)) {
+        /* error */
+    }
     return Py_BuildValue("d", result);
 }
 
@@ -33,7 +35,8 @@ static PyMethodDef _wigner_methods[] = {
 };
 
 
-PyMODINIT_FUNC init_wigner(void)
+PyMODINIT_FUNC init_wigner_gsl(void)
 {
-    (void) Py_InitModule("_wigner", _wigner_methods);
+    (void) Py_InitModule("_wigner_gsl", _wigner_methods);
+    gsl_set_error_handler_off();
 }
