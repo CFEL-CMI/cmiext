@@ -5,6 +5,7 @@
 
 
 from numpy.distutils.core import setup, Extension
+import sys
 
 long_description = """JK Python extensions
 
@@ -14,6 +15,8 @@ Original authors:   Jochen Küpper <software@jochen-kuepper.de>
 Current maintainer: Jochen Küpper <software@jochen-kuepper.de>
 """
 
+version_major = sys.version_info[0]
+version_minor = sys.version_info[1]
 
 setup(name="jkext",
       author              = "Jochen Küpper",
@@ -31,7 +34,8 @@ setup(name="jkext",
                              Extension('jkext._wigner_avda',
                                        sources = ['src/wigner_avda.f',],
                                        extra_link_args = ['-bundle'],
-                                       libraries = []),
+                                       libraries = ['dl', 'python%d.%d' % (version_major,
+                                                                           version_minor)]),
                              # Extension('jkext._wigner_fft',
                              #           sources = ['src/wigner_fft.f'],
                              #           extra_compile_args = ['-bundle', '-ffixed-line-length-none'],
