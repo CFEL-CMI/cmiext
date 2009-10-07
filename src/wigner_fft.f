@@ -226,7 +226,6 @@ c Local variables
       complex         twopii
       doubleprecision const,bconst
       real     etime,ta(2),time1,shift
-      external etime
 
                                                                              # initial checks
       if (nplans.lt.lmax.or.l.gt.lmax) then
@@ -511,7 +510,6 @@ c Local variables
       complex         twopii
       doubleprecision const,bconst
       real     etime,ta(2),ttot,shift,tini,tplan,tb,tbpad,tfft,tdfill
-      external etime
 
       ttot=0.0-etime(ta)
       ttot=0.0-etime(ta)
@@ -813,7 +811,6 @@ c Local variables
       integer         lstart,ll,m1,m2
       doubleprecision d1,d2
       real     etime,ta(2),time1
-      external etime
 c Functions
       doubleprecision up1lm,up1l,upm1
 c Saved local variables
@@ -1207,11 +1204,12 @@ c Local variables
       integer         i,k0,k1,ksin,m1,m2
       doubleprecision cosd,sind,v0,v1,vsin,w0,w1,l2,p2
       real     etime,ta(2),time1
-      external etime
 c Saved local variables
       doubleprecision fact(0:2*llim)
+      integer         nfact
+      parameter(nfact=1+2*llim)
       save fact
-      data fact/(2*llim+1)*0d0/
+      data fact/nfact*0d0/
 
 c     initial checks
       if(l.gt.lsup)    goto 901
