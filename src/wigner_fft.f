@@ -1,3 +1,9 @@
+C     Some compiler options for numpy.distutils
+C
+CF77FLAGS(gnu) = -ffixed-line-length-72 -Wn0-line-truncation
+CF77FLAGS(gnu95) = -ffixed-line-length-72 -Wno-line-truncation
+C
+C
 c     ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 c                              W I G N E R F F T
 c     ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -227,7 +233,7 @@ c Local variables
       doubleprecision const,bconst
       real     etime,ta(2),time1,shift
 
-                                                                             # initial checks
+C initial checks
       if (nplans.lt.lmax.or.l.gt.lmax) then
        if (nplans.lt.lmax) then
         write(*,*) 'slmfft >> stop << Insufficient "plan" dimensioning:'
