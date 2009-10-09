@@ -231,7 +231,7 @@ class Molecule:
     def starkeffect(self, state, dcfields=None, acfield=None, energies=None):
         """Get or set the potential energies as a function of the electric field strength.
 
-        When |energies| and |fields| are None, return the Stark curve for the specified quantum state.
+        When |energies| and |dcfields| are None, return the Stark curve for the specified quantum state.
 
         When |energies| and |fields| are specified, save the Stark curve for the specified quantum state in the
         Molecule's HDF5 storage file.
