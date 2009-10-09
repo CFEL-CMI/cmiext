@@ -228,7 +228,7 @@ class Molecule:
         return acfields, cos2
 
 
-    def starkeffect(self, state, dcfields=None, energies=None, acfield=None):
+    def starkeffect(self, state, dcfields=None, acfield=None, energies=None):
         """Get or set the potential energies as a function of the electric field strength.
 
         When |energies| and |fields| are None, return the Stark curve for the specified quantum state.
@@ -266,13 +266,13 @@ class Molecule:
                                 energies[id] = num.array((calc.energy(state),))
                 # store calculated values for this M
                 for id in energies.keys():
-                    self.starkeffect_merge(State().fromid(id), param.dcfields, energies[id], param.acfields)
+                    self.starkeffect_merge(State().fromid(id), param, energies[id])
         else:
             raise NotImplementedError("unknown rotor type in Stark energy calculation.")
         self.__storage.flush()
 
 
-    def starkeffect_merge(self, state, newdcfields=None, newenergies=None, newacfields=None):
+    def starkeffect_merge(self, state, param, newenergies=None):
         """Merge the specified pairs of field strength and Stark energies into the existing data
 .
         not really tested
@@ -280,18 +280,20 @@ class Molecule:
         non uniform natrix sizes. apend in one or the other direction.
         TODO we need to improve the test for the exsistense of calculations at this ac field already !
         """
+        newdcfields=param.dcfields
+        newacfields=param.acfields
         assert len(newdcfields)*len(newacfields)  == len(newenergies)
         reshapedenergies = num.reshape(newenergies,(len(newdcfields),len(newacfields)))
         for f in range(len(newacfields)):
             acfield = newacfields[f]
             try:
-                olddcfields, oldenergies = self.starkeffect(state,acfield=acfield)
+                olddcfields, oldenergies = self.starkeffect(state, acfield=acfield)
                 dcfields, energies = jkext.util.column_merge([olddcfields, oldenergies], [newdcfields, newenergies])
             except tables.exceptions.NodeError:
                 dcfields = newdcfields
                 energies = reshapedenergies[:,f]
                 assert len(energies) == len(dcfields)
-            self.starkeffect(state, dcfields, energies, acfield=acfield)
+            self.starkeffect(state, dcfields, acfield, energies)
 
     def starkeffect_states(self):
         """Get a list of states for which we know the Stark effect."""
