@@ -238,7 +238,7 @@ class Molecule:
         """
         assert acfield != None
         acfielddir = "_"+replace(str(acfield),'.','d') # we use the nameing convension 
-        # _somenumberdsomeothernumber for the where d replaces . as hdf doesnt like . and groups that start with _ 
+        # _somenumberdsomeothernumber for the where d replaces . as hdf doesnt like . and groups that start with a number 
         if energies == None and dcfields == None:
             return jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/" + acfielddir + "/dcfield"), \
                    jkext.hdf5.readVLArray(self.__storage, "/" + state.hdfname() + "/" + acfielddir + "/dcstarkenergy")
