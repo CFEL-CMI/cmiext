@@ -13,6 +13,7 @@ Python extensions for calculations relevant to the manipulation of molecules.
 
 Original authors:   Jochen Küpper <software@jochen-kuepper.de>
 Current maintainer: Jochen Küpper <software@jochen-kuepper.de>
+For a list of all contributors see the AUTHORS file.
 """
 
 version_major = sys.version_info[0]
@@ -38,7 +39,7 @@ setup(name="jkext",
                                                                            version_minor)]),
                              Extension('jkext._wigner_fft',
                                        sources = ['src/wigner_fft.f'],
-                                       include_dirs = ['/opt/local/include','/usr/include'],
+                                       include_dirs = ['/opt/local/include', '/usr/local/include', '/usr/include'],
                                        extra_link_args = ['-bundle'],
                                        libraries = ['fftw3f', 'fftw3',
                                                     'dl', 'python%d.%d' % (version_major,
