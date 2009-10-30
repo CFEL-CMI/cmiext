@@ -211,8 +211,8 @@ class AsymmetricRotor:
                     i += 1
             elif self.__saveevec == True:
                 eval,evec = num.linalg.eigh(blocks[symmetry]) #evec is an array of the eigenvectors 
-                eval = num.sort(eval)#evec[:,i] is the eigenvector corosponding to eval[i]
                 evec[:,] = evec[:,num.argsort(eval)] # sort acording to the eigen values
+                eval = num.sort(eval)#evec[:,i] is the eigenvector corosponding to eval[i]
                 i = 0
                 for state in self.__stateorder(symmetry):
                     if state.J() <= self.__Jmax_save:
