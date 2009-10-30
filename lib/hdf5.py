@@ -20,12 +20,29 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 import numpy as num
 import tables
+import string
 
 
 def readVLArray(file, name):
     array = file.getNode(name)
     return num.array(array.read())[0]
 
+def readVLArraysfromsubgroups(file, name, array_name):
+    "read all arrays of the same type from subgroups of the specified group"
+    groups = file.getNode(name)._v_groups
+    acfields = [];
+    for acfieldstr in groups:
+        acfield = float(string.replace(acfieldstr,'d','.')[1:])
+        acfields.append(acfield)
+        for array in file.listNodes(name + "/" + acfieldstr,classname='VLArray'):
+            if array.name == array_name:
+                try:
+                    stackedarrays = num.vstack([stackedarrays,array])
+                except UnboundLocalError:
+                    stackedarrays = array
+    stackedarrays[:] = stackedarrays[num.argsort(acfields)]
+    acfields = num.sort(acfields)
+    return stackedarrays,acfields
 
 def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float64Atom(shape=()),
                  filters=tables.Filters(complevel=1, complib='zlib')):
