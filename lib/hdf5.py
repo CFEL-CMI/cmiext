@@ -28,7 +28,10 @@ def readVLArray(file, name):
     return num.array(array.read())[0]
 
 def readVLArraysfromsubgroups(file, name, array_name):
-    "read all arrays of the same type from subgroups of the specified group"
+    """
+    read all arrays of the same type from subgroups of the specified group also return the dirs converted to
+    floats assuming they are acfields
+    """ 
     groups = file.getNode(name)._v_groups
     acfields = [];
     for acfieldstr in groups:
@@ -43,6 +46,20 @@ def readVLArraysfromsubgroups(file, name, array_name):
     stackedarrays[:] = stackedarrays[num.argsort(acfields)]
     acfields = num.sort(acfields)
     return stackedarrays,acfields
+
+
+def readSubdirs(file, name):
+    """
+    read all arrays of the same type from subgroups of the specified group also return the dirs converted to
+    floats assuming they are acfields
+    """ 
+    groups = file.getNode(name)._v_groups
+    acfields = [];
+    for acfieldstr in groups:
+        acfield = float(string.replace(acfieldstr,'d','.')[1:])
+        acfields.append(acfield)
+    acfields = num.sort(acfields)
+    return acfields
 
 def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float64Atom(shape=()),
                  filters=tables.Filters(complevel=1, complib='zlib')):
