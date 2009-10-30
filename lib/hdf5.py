@@ -50,7 +50,7 @@ def readVLArraysfromsubgroups(file, name, array_name):
 
 def readSubdirs(file, name):
     """
-    read all arrays of the same type from subgroups of the specified group also return the dirs converted to
+    read all dirs converted to
     floats assuming they are acfields
     """ 
     groups = file.getNode(name)._v_groups
