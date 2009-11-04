@@ -18,21 +18,19 @@ from __future__ import division
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
-"""Provide physical constants.
+"""Provide mathematical and physical constants.
 
-If pyGSL is available, we will simply import its constants into our namespace.
-
-Otherwise, we will provide "copies" of the most important constants,
-using the same naming convention and the same values.
+Physical constants are based on CODATA values, see module codata.py for details.
 
 Values last updated: $Date$"""
 
-try:
-    from pygsl.const import *
-except ImportError:
-    angstrom = 1e-10
-    boltzmann = 1.3806504000000001e-23
-    pi = 3.1415926535897931
-    plancks_constant_h = 6.6260689599999996e-34
-    speed_of_light = 299792458.
-    unified_atomic_mass = 1.6605387820000001e-27
+# mathematical constants
+pi = 3.1415926535897931
+# CODATA
+from jkext.codata import codata
+Boltzmann_constant                      = codata["Boltzmann constant"][0]
+Planck_constant                         = codata["Planck constant"][0]
+speed_of_light                          = codata["speed of light in vacuum"][0]
+unified_atomic_mass                     = codata["unified atomic mass unit"][0]
+# other physical units or conversion factors
+Aangstrom = 1e-10
