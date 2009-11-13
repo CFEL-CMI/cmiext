@@ -354,7 +354,7 @@ Wien wavelength displacement law constant              2.897 7685 e-3        0.0
 codata = {}
 for line in textdata[1:].split("\n"):
     name  = line[:55].strip()
-    value = float(line[55:77].replace(" ", "").replace(".", ""))
-    error = float(line[77:99].replace(" ", "").replace("(exact)", "0").replace(".", ""))
+    value = float(line[55:77].replace(" ", "").replace("...", ""))
+    error = float(line[77:99].replace(" ", "").replace("...", "").replace("(exact)", "0"))
     unit  = line[99:].strip()
     codata[name] = (value, error, unit)
