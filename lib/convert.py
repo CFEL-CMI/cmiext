@@ -27,12 +27,12 @@ import numpy
 
 def D2Cm(val):
     """Convert dipole moment from Debye to Coulomb * meter"""
-    return numpy.array(val) * 1e-21 / const.speed_of_light
+    return numpy.array(val) * 1e-21 / jkext.const.speed_of_light
 
 
 def Cm2D(val):
     """Convert dipole moment from Coulomb * meter to Debye"""
-    return numpy.array(val) / (1e-21 / const.speed_of_light)
+    return numpy.array(val) / (1e-21 / jkext.const.speed_of_light)
 
 
 def eV2m(val):
@@ -42,7 +42,7 @@ def eV2m(val):
 
 def Hz2J(val):
     """Hertz -> Joule"""
-    return numpy.array(val) * const.Planck_constant
+    return numpy.array(val) * jkext.const.Planck_constant
 
 
 def MHz2J(val):
