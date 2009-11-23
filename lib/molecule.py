@@ -27,8 +27,8 @@ import jkext.hdf5, jkext.starkeffect, jkext.util, jkext.convert
 from jkext.state import State
 
 
-Masses = {'H': 1.0078250321, 'C': 12, 'N': 14.0030740052, 'O': 15.9949146221}
-Ordernumbers = {'H': 1, 'D': 1, 'C': 6, 'N': 7, 'O': 8}
+Masses = {'H': 1.0078250321, 'C': 12, 'N': 14.0030740052, 'O': 15.9949146221, 'Br': 79., 'I': 126.90447}
+Ordernumbers = {'H': 1, 'D': 1, 'C': 6, 'N': 7, 'O': 8, 'Br': 35, 'I': 53}
 
 
 class Atom:
