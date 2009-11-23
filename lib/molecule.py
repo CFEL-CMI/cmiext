@@ -74,14 +74,10 @@ class Molecule:
     positions.
     """
 
-    def __init__(self, atoms=None, storage=None, name="Generic molecule"):
+    def __init__(self, atoms=None, name="Generic molecule"):
         """Create Molecule from a list of atoms."""
         self.__atoms = atoms
         self.__name = name
-        if storage != None:
-            self.__storage = tables.openFile(storage, mode='a', title=name)
-        else:
-            self.__storage = None
         if atoms != None:
             self.__update()
 
