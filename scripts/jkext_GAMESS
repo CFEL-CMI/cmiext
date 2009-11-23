@@ -32,7 +32,7 @@ def main(args):
     for file in args:
         for geom in geometries(file):
             mol = Molecule(atoms=geom)
-            print mol.principal_axis_of_inertia()[0]
+            print mol.principal_axis_of_inertia()[0], mol.mass(unit='u')
 
 
 if __name__ == "__main__":

@@ -97,7 +97,7 @@ class Molecule:
 
     def center_of_mass(self):
         """Calculate center of mass of molecule"""
-        return num.sum(num.outer(self.masses, [1,1,1]) * self.positions, axis=0) / num.sum(self.masses)
+        return num.sum(num.outer(self.masses, [1,1,1]) * self.positions, axis=0) / self.mass()
 
 
     def plot(self):
@@ -105,6 +105,16 @@ class Molecule:
         import matplotlib.pyplot as plt
         plt.plot(self.positions[:,0], self.positions[:,1], 'o')
         plt.show()
+
+
+    def mass(self, unit="kg"):
+        """Sum of atomic masses"""
+        if "u" == unit:
+            k = 1 / const.unified_atomic_mass
+        else:
+            assert "kg" == unit
+            k = 1
+        return k * num.sum(self.masses)
 
 
     def principal_axis_of_inertia(self):
