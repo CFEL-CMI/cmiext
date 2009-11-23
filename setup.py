@@ -31,6 +31,7 @@ setup(name="jkext",
       packages            = ['jkext'],
       scripts             = ['scripts/jkext_brute-force-orientation',
                              'scripts/jkext_calculate_energy',
+                             'scripts/jkext_GAMESS',
                              'scripts/jkext_plot_energy',
                              'scripts/jkext_print_energy']
       )
