@@ -1,7 +1,7 @@
 # -*- coding: utf-8; fill-column: 120 -*-
 #
 # This file is part of JK Python extensions
-# Copyright (C) 2008 Jochen Küpper <software@jochen-kuepper.de>
+# Copyright (C) 2008,2009 Jochen Küpper <software@jochen-kuepper.de>
 #
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
@@ -26,11 +26,13 @@ Values last updated: $Date$"""
 
 # mathematical constants
 pi = 3.1415926535897931
+
 # CODATA
 from jkext.codata import codata
 Boltzmann_constant                      = codata["Boltzmann constant"][0]
 Planck_constant                         = codata["Planck constant"][0]
 speed_of_light                          = codata["speed of light in vacuum"][0]
 unified_atomic_mass                     = codata["unified atomic mass unit"][0]
+
 # other physical units or conversion factors
-Aangstrom = 1e-10
+Angstrom = 1e-10

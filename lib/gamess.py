@@ -23,7 +23,7 @@ import molecule
 
 def atom(line):
     name, charge, x, y, z = line.split()
-    return molecule.Atom(name, (x, y, z))
+    return molecule.Atom(name, (x, y, z), length="Angstrom")
 
 
 def geometries(file):
@@ -34,9 +34,10 @@ def geometries(file):
         if 0 < line.find("COORDINATES OF ALL ATOMS ARE"):
             new_structure = True
             structure = []
-        elif len(line) < 2:
-            new_structure = False
+        elif new_structure and len(line.strip()) < 1:
             geom.append(structure)
+            new_structure = False
+            structure = []
         elif True == new_structure:
             if (0 < line.find("ATOM")) or (0 < line.find("---")):
                 continue

@@ -21,11 +21,14 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 import numpy as num
 import numpy.linalg
-import const
+
+import jkext.const as const
 
 
-Masses = {'H': 1.0078250321, 'C': 12, 'N': 14.0030740052, 'O': 15.9949146221, 'Br': 79., 'I': 126.90447}
-Ordernumbers = {'H': 1, 'D': 1, 'C': 6, 'N': 7, 'O': 8, 'Br': 35, 'I': 53}
+Masses = {'H': 1.0078250321, 'C': 12, 'N': 14.0030740052, 'O': 15.9949146221,
+          'BR': 78.9183371, 'BR79': 78.9183371, 'BR81': 80.9162906,
+          'I': 126.90447}
+Ordernumbers = {'H': 1, 'D': 1, 'C': 6, 'N': 7, 'O': 8, 'BR': 35, 'I': 53}
 
 
 class Atom:
@@ -36,13 +39,14 @@ class Atom:
     Internal units are SI (i.e., m, kg, ...)! You can specify what length-unit is used on input (SI or Angstrom).
     """
     def __init__(self, symbol, position, length="SI"):
+        symbol = symbol.upper()
         self.__Z = Ordernumbers[symbol]
         self.__mass = Masses[symbol] * const.unified_atomic_mass
         self.__symbol = symbol
-        self.position = num.array(position)
+        self.position = num.array(position, num.float)
         assert(self.position.shape == (3,))
         if length == "Angstrom":
-            self.position *= const.angstrom
+            self.position *= num.float(const.Angstrom)
         else:
             assert(length == "SI")
 

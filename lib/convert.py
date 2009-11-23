@@ -1,4 +1,4 @@
-sv# -*- coding: utf-8; fill-column: 120 -*-
+# -*- coding: utf-8; fill-column: 120 -*-
 #
 # This file is part of JK Python extensions
 # Copyright (C) 2008 Jochen Küpper <software@jochen-kuepper.de>
