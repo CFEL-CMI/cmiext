@@ -25,14 +25,10 @@ setup(name="jkext",
       description         = "JK Python extensions",
       license             = "GPL",
       url                 = "http://python.jochen-kuepper.de",
-      version             = "0.2.2",
+      version             = "0.3.0",
       long_description    = long_description,
       package_dir         = {'jkext': 'lib'},
       packages            = ['jkext'],
-      scripts             = ['scripts/jkext_brute-force-orientation',
-                             'scripts/jkext_calculate_energy',
-                             'scripts/jkext_GAMESS',
-                             'scripts/jkext_plot_energy',
-                             'scripts/jkext_print_energy']
+      scripts             = ['scripts/jkext_GAMESS',]
       )
 
