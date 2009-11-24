@@ -91,6 +91,11 @@ class Molecule:
             self.positions[i,:] = self.__atoms[i].position
 
 
+    def atoms(self):
+        """List of molecule's atoms"""
+        return self.__atoms
+
+
     def center_of_mass(self):
         """Calculate center of mass of molecule"""
         return num.sum(num.outer(self.masses, [1,1,1]) * self.positions, axis=0) / self.mass()
