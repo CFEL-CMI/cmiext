@@ -39,9 +39,9 @@ class Atom:
     Internal units are SI (i.e., m, kg, ...)! You can specify what length-unit is used on input (SI or Angstrom).
     """
     def __init__(self, symbol, position, length="SI"):
-        symbol = symbol.upper()
-        self.__Z = Ordernumbers[symbol]
-        self.__mass = Masses[symbol] * const.unified_atomic_mass
+        symbol = symbol
+        self.__Z = Ordernumbers[symbol.upper()]
+        self.__mass = Masses[symbol.upper()] * const.unified_atomic_mass
         self.__symbol = symbol
         self.position = num.array(position, num.float)
         assert(self.position.shape == (3,))
