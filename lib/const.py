@@ -35,4 +35,5 @@ speed_of_light                          = codata["speed of light in vacuum"][0]
 unified_atomic_mass                     = codata["unified atomic mass unit"][0]
 
 # other physical units or conversion factors
-Angstrom = 1e-10
+Angstrom                                = 1e-10
+Debye                                   = 1e-21 / speed_of_light
