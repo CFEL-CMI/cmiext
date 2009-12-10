@@ -52,12 +52,12 @@ def MHz2J(val):
 
 def invcm2J(val):
     """cm^{-1} -> Joule"""
-    return val * 100 * const.Planck_constant * const.speed_of_light
+    return val * 100 * jkext.const.Planck_constant * jkext.const.speed_of_light
 
 
 def J2Hz(val):
     """Joule -> Hertz"""
-    return numpy.array(val) / const.Planck_constant
+    return numpy.array(val) / jkext.const.Planck_constant
 
 
 def J2MHz(val):
@@ -67,7 +67,7 @@ def J2MHz(val):
 
 def J2invcm(val):
     """Joule -> cm^{-1}"""
-    return val / const.Planck_constant / const.speed_of_light / 100
+    return val / jkext.const.Planck_constant / jkext.const.speed_of_light / 100
 
 
 def invcm2J(val):
@@ -83,3 +83,7 @@ def m2eV(val):
 def kV_cm2V_m(val):
     """kV/cm -> V/m"""
     return numpy.array(val) / 1e-5
+
+def V_m2kV_cm(val):
+    """V/m -> kV/cm"""
+    return numpy.array(val) * 1e-5
