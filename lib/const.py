@@ -20,7 +20,7 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 """Provide mathematical and physical constants.
 
-Physical constants are based on CODATA values, see module codata.py for details.
+Physical constants are based on CODATA values as far as available, see module codata.py for details.
 
 Values last updated: $Date$"""
 
@@ -29,10 +29,12 @@ pi = 3.1415926535897931
 
 # CODATA
 from jkext.codata import codata
+atomic_unit_of_electric_dipole_moment   = codata["atomic unit of electric dipole mom."][0]
 Boltzmann_constant                      = codata["Boltzmann constant"][0]
 Planck_constant                         = codata["Planck constant"][0]
 speed_of_light                          = codata["speed of light in vacuum"][0]
 unified_atomic_mass                     = codata["unified atomic mass unit"][0]
+
 
 # other physical units or conversion factors
 Angstrom                                = 1e-10
