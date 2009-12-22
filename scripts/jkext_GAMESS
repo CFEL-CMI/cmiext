@@ -32,7 +32,14 @@ def main(args):
     for file in args:
         for geom in geometries(file):
             mol = Molecule(atoms=geom)
-            print mol.principal_axis_of_inertia()[0], mol.mass(unit='u')
+            rotcon, axes = mol.principal_axis_of_inertia()
+            mass = mol.mass(unit='u')
+            print "\n\n"
+            print "A, B, C (Hz) =", rotcon
+            print "mass (u)     =", mass
+            print "                 ", axes[0,:]
+            print "transformation = ", axes[1,:]
+            print "(x,y,z -> a,b,c) ", axes[2,:]
 
 
 if __name__ == "__main__":
