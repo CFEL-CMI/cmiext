@@ -90,4 +90,4 @@ def V_m2kV_cm(val):
 
 def A32CM2_V(val):
     """Å^3 -> C M^2 / V"""
-    return val*jkext.const.vacuum_permittivity*((jkext.const.Angstrom)**3)*4*const.pi
+    return val*jkext.const.vacuum_permittivity*((jkext.const.Angstrom)**3)*4*jkext.const.pi
