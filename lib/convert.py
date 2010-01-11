@@ -72,7 +72,7 @@ def J2invcm(val):
 
 def invcm2J(val):
     """cm^{-1} -> Joule"""
-    return val * 100 * jkext.codata.codata["Planck constant"][0] * jkext.convert.codata["speed_of_light"][0]
+    return val * 100 * jkext.codata.codata["Planck constant"][0] * jkext.codata.codata["speed of light in vacuum"][0]
 
 
 def m2eV(val):
@@ -87,3 +87,7 @@ def kV_cm2V_m(val):
 def V_m2kV_cm(val):
     """V/m -> kV/cm"""
     return numpy.array(val) * 1e-5
+
+def A32CM2_V(val):
+    """Å^3 -> C M^2 / V"""
+    return val*const.vacuum_permittivity*((const.Angstrom)**3)*4*const.pi
