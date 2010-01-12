@@ -1,7 +1,7 @@
 # -*- coding: utf-8; fill-column: 120 -*-
 #
 # This file is part of JK Python extensions
-# Copyright (C) 2008,2009 Jochen Küpper <software@jochen-kuepper.de>
+# Copyright (C) 2008,2009,2010 Jochen Küpper <software@jochen-kuepper.de>
 #
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
@@ -39,5 +39,6 @@ vacuum_permittivity                     = codata["electric constant"][0]
 
 
 # other physical units or conversion factors
-Angstrom                                = 1e-10
-Debye                                   = 1e-21 / speed_of_light
+Angstrom                                = 1e-10 # m
+Debye                                   = 1e-21 / speed_of_light # C m
+inch                                    = 2.54e-2 # m
