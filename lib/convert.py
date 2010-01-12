@@ -70,6 +70,11 @@ def J2invcm(val):
     return val / jkext.const.Planck_constant / jkext.const.speed_of_light / 100
 
 
+def inch2m(val):
+    """inch -> m"""
+    return val * jkext.const.inch
+
+
 def invcm2J(val):
     """cm^{-1} -> Joule"""
     return val * 100 * jkext.codata.codata["Planck constant"][0] * jkext.codata.codata["speed of light in vacuum"][0]
