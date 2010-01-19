@@ -29,6 +29,7 @@ setup(name="jkext",
       long_description    = long_description,
       package_dir         = {'jkext': 'lib'},
       packages            = ['jkext'],
-      scripts             = ['scripts/jkext_GAMESS',]
+      scripts             = ['scripts/jkext_GAMESS',
+                             'scripts/jkext_linearize']
       )
 
