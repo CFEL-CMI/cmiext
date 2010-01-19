@@ -25,20 +25,29 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 import getopt, sys
 import os.path
+import struct
 import numpy
 import scipy
 import scipy.interpolate
 
 
 def usage():
-    print "jkext_linearize [-d distance] [-f fsr] [-o output_file] data marker"
+    print "jkext_linearize [-a|--absolute=pos:freqeuncy] [-d distance] [-f fsr] [-o output_basename] data marker"
     print "\nAll frequencies are in Hz"
+
+
+def pittload(filename, square=False):
+    bytes = open(filename, "rb").read()
+    data = numpy.array(struct.unpack(">%dH" % (len(bytes)/2,), bytes))
+    if square:
+        data = data**2
+    return data
 
 
 
 def main(args):
     try:
-        opts, args = getopt.getopt(args, "hd:f:o:", ["help"])
+        opts, args = getopt.getopt(args, "a:d:f:ho:", ["absolute", "help", "square"])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
@@ -48,24 +57,37 @@ def main(args):
     fsr = 300e6
     step = 1e6
     outfile = sys.stdout
+    abs_point = 0
+    abs_freq = 0
+    square = False
     # scan commandline
     for o, a in opts:
         if o in ("-h", "--help"):
             usage()
             sys.exit()
+        elif o in ("-a", "--absolute"):
+            point, freq = a.split(':')
+            abs_point = int(point)
+            abs_freq = float(freq)
         elif o == "-d":
             step = float(a)
         elif o == "-f":
             fsr = float(a)
         elif o == "-o":
             outfile_name = a
+        elif o == "--square":
+            square = True
         else:
             assert False, "unhandled commandline option"
     # read data (intensities and marker positions)
     dataname = args[0]
     markername = args[1]
-    data = numpy.loadtxt(dataname)
+    data = pittload(dataname, square)
     marker = numpy.loadtxt(markername, dtype=numpy.int64)
+    if marker[0] > abs_point:
+        print "iodine calibration outside valid range"
+        abs_point = marker[0]
+        abs_freq = 0
     # create marker interpolation
     marker_frequencies = numpy.cumsum(numpy.ones(marker.shape) * fsr)
     frequency = scipy.interpolate.interp1d(marker, marker_frequencies, kind='cubic', copy=False, bounds_error=True)
@@ -76,13 +98,16 @@ def main(args):
         inten[i - marker[0]] = data[i]
         freq[i - marker[0]]  = frequency(i)
         # print>>outfile_orig, freq[i - marker[0]], inten[i - marker[0]]
-    orig = numpy.array(zip(freq, inten))
     # create spectrum interpolation
     intensity = scipy.interpolate.interp1d(freq, inten, kind='linear', copy=False, bounds_error=False, fill_value=0.)
     # create equidistant spectrum
     linear = numpy.ones(((freq[-1]-freq[0])/step, 2))
     linear[:,0] = numpy.cumsum(linear[:,0]*step)
     linear[:,1] = intensity(linear[:,0])
+    # shift frequencies according to iodine calibration
+    shift = abs_freq - freq[abs_point]
+    orig = numpy.array(zip(freq - shift, inten))
+    linear[:,0] -= shift
     # open output files
     root, ext = os.path.splitext(outfile_name)
     outfile_orig = file(root + ".orig" + ext, 'w')
@@ -93,4 +118,7 @@ def main(args):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) < 1:
+        usage()
+        sys.exit(1)
     main(sys.argv[1:])
