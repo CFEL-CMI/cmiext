@@ -24,6 +24,7 @@ Copyright (C) 2010 Jochen Küpper"""
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 import getopt, sys
+import os.path
 import numpy
 import scipy
 import scipy.interpolate
@@ -62,7 +63,30 @@ def main(args):
             assert False, "unhandled commandline option"
     # read data (intensities and marker positions)
     dataname = args[0]
-    markername = args[1] + ".linear", 'w')
+    markername = args[1]
+    data = numpy.loadtxt(dataname)
+    marker = numpy.loadtxt(markername, dtype=numpy.int64)
+    # create marker interpolation
+    marker_frequencies = numpy.cumsum(numpy.ones(marker.shape) * fsr)
+    frequency = scipy.interpolate.interp1d(marker, marker_frequencies, kind='cubic', copy=False, bounds_error=True)
+    # create frequencies and intensities of data points for defined range
+    freq = numpy.zeros((marker[-1]-marker[0]+1))
+    inten = numpy.zeros((marker[-1]-marker[0]+1))
+    for i in range(marker[0], marker[-1]+1, 1):
+        inten[i - marker[0]] = data[i]
+        freq[i - marker[0]]  = frequency(i)
+        # print>>outfile_orig, freq[i - marker[0]], inten[i - marker[0]]
+    orig = numpy.array(zip(freq, inten))
+    # create spectrum interpolation
+    intensity = scipy.interpolate.interp1d(freq, inten, kind='linear', copy=False, bounds_error=False, fill_value=0.)
+    # create equidistant spectrum
+    linear = numpy.ones(((freq[-1]-freq[0])/step, 2))
+    linear[:,0] = numpy.cumsum(linear[:,0]*step)
+    linear[:,1] = intensity(linear[:,0])
+    # open output files
+    root, ext = os.path.splitext(outfile_name)
+    outfile_orig = file(root + ".orig" + ext, 'w')
+    outfile_lin = file(root + ".linear" + ext, 'w')
     # write results
     numpy.savetxt(outfile_orig, orig)
     numpy.savetxt(outfile_lin, linear)
