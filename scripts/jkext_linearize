@@ -32,34 +32,57 @@ import scipy.interpolate
 
 
 def usage():
-    print "jkext_linearize [-a|--absolute=pos:freqeuncy] [-d distance] [-f fsr] [-o output_basename] data marker"
-    print "\nAll frequencies are in Hz"
+    print "jkext_linearize [-a|--absolute=pos:freqeuncy] [-d distance] [-f fsr] [-o output_basename] [--pitt] [--square] data marker"
+    print
+    print "All frequencies are in Hz"
 
 
-def pittload(filename, square=False):
+
+def load_text(filename, square=False):
+    """Read data from an pure text file, with one column of intensities"""
+    data = numpy.loadtxt(filename)
+    if square:
+        data = (data**2)
+    return data
+
+
+
+def load_PittMASSCOMP(filename, square=False):
+    """Read binary data from the Pitt MASSCOMP data acquisition system (1980s and 90s)
+
+    The original PMT data record is stored as
+        compact = (short)(sqrt( counts ) * 2**5)
+    to keep numbers within signed short integer for counts to 1M.  So, to restore to a linear scale, use
+        counts = compact * compact / 2**10
+    This calculation is performed when square==True.
+
+    All other traces are stored as simple ADC values and are read out straight, if square=False.
+    """
     bytes = open(filename, "rb").read()
     data = numpy.array(struct.unpack(">%dH" % (len(bytes)/2,), bytes))
     if square:
-        data = data**2
+        data = (data**2) / 2**10
     return data
 
 
 
 def main(args):
     try:
-        opts, args = getopt.getopt(args, "a:d:f:ho:", ["absolute", "help", "square"])
+        opts, args = getopt.getopt(args, "a:d:f:ho:", ["absolute", "fsr", "help", "plot", "pitt", "square"])
     except getopt.GetoptError, err:
         # print help information and exit:
         print str(err) # will print something like "option -a not recognized"
         usage()
         sys.exit(2)
     # default values
-    fsr = 300e6
-    step = 1e6
-    outfile = sys.stdout
     abs_point = 0
     abs_freq = 0
+    create_plot = False
+    fsr = 300e6
+    load_intensity = load_text
+    outfile = sys.stdout
     square = False
+    step = 1e6
     # scan commandline
     for o, a in opts:
         if o in ("-h", "--help"):
@@ -71,10 +94,14 @@ def main(args):
             abs_freq = float(freq)
         elif o == "-d":
             step = float(a)
-        elif o == "-f":
+        elif o in ("-f", "--fsr"):
             fsr = float(a)
         elif o == "-o":
             outfile_name = a
+        elif o == "--plot":
+            create_plot = True
+        elif o == "--pitt":
+            load_intensity = load_PittMASSCOMP
         elif o == "--square":
             square = True
         else:
@@ -82,7 +109,7 @@ def main(args):
     # read data (intensities and marker positions)
     dataname = args[0]
     markername = args[1]
-    data = pittload(dataname, square)
+    data = load_intensity(dataname, square)
     marker = numpy.loadtxt(markername, dtype=numpy.int64)
     if marker[0] > abs_point:
         print "iodine calibration outside valid range"
@@ -115,6 +142,14 @@ def main(args):
     # write results
     numpy.savetxt(outfile_orig, orig)
     numpy.savetxt(outfile_lin, linear)
+    # create plot
+    if create_plot:
+        import matplotlib.pyplot as plt
+        plt.figure(1)
+        plt.plot(orig[:,0], orig[:,1])
+        plt.plot(linear[:,0], linear[:,1])
+        plt.savefig(root + ".orig.eps")
+
 
 
 if __name__ == "__main__":
