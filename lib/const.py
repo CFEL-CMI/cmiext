@@ -35,6 +35,7 @@ Planck_constant                         = codata["Planck constant"][0]
 speed_of_light                          = codata["speed of light in vacuum"][0]
 unified_atomic_mass                     = codata["unified atomic mass unit"][0]
 vacuum_permittivity                     = codata["electric constant"][0]
+vacuum_permeability                     = codata["mag. constant"][0]
 
 
 
