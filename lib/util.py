@@ -67,4 +67,4 @@ if __name__ == "__main__":
     x2 = num.linspace(0., 30., 16)
     y1 = x1
     y2 = x2**2
-    print xy_merge([x1, y1], [x2, y2])
+    print column_merge([x1, y1], [x2, y2])
