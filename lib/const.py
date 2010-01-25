@@ -31,6 +31,7 @@ pi = 3.1415926535897931
 from jkext.codata import codata
 atomic_unit_of_electric_dipole_moment   = codata["atomic unit of electric dipole mom."][0]
 Boltzmann_constant                      = codata["Boltzmann constant"][0]
+electron_volt                           = codata["electron volt"][0]
 Planck_constant                         = codata["Planck constant"][0]
 speed_of_light                          = codata["speed of light in vacuum"][0]
 unified_atomic_mass                     = codata["unified atomic mass unit"][0]
