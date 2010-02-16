@@ -51,6 +51,34 @@ def column_merge(list1, list2, column=0):
         list.append(vec)
     return list
 
+def columnarray_merge(list1, list2, column=0):
+    """Merge two lists of 1D arrays (vectors) according to the values in one |column| of the two. Entries of equal
+    base-values are reduced to the one in list1. The resulting vectors are in random order.
+
+    Values are considered equal when their relative difference is smaller than 10*epsilon.
+    """
+    assert len(list1) == len(list2)
+    lshape1 = list1[1].shape[1]
+    lshape2 = list2[1].shape[1]
+    assert lshape1 == lshape2 # handle that the second column can be a row
+    # i.e eigenvectors change to a list with an entry pr. eigenstate
+    if lshape1>1:
+        nlist1 = [list1[0]]
+        nlist2 = [list2[0]]
+        for j in range(0,lshape1):
+            nlist1.append(list1[1][:,j])
+            nlist2.append(list2[1][:,j])
+        list1 = nlist1
+        list2 = nlist2
+    list = column_merge(list1, list2, column=0)
+    
+    if lshape1>1: # change back into array
+        ar = num.vstack((list[1],list[2]))
+        for i in range(3,lshape1+1):
+            ar = num.vstack((ar,list[i]))
+        ar = ar.transpose()
+        list = [list[0],ar]
+    return list
 
 def column_sort(data, column=0):
     """Sort a list of 1D arrays (vectors) according to the values in one of them, as specified by |column|."""
