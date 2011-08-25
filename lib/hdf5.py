@@ -30,7 +30,7 @@ def readVLArray(file, name):
 def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float64Atom(shape=()),
                  filters=tables.Filters(complevel=1, complib='zlib')):
     """
-    Write a single array, corresponding to a single Stark curve, to the storage file.
+    Write a single array, corresponding, for instance, to a single Stark curve, to the storage file.
 
     We only use zlib-compression at level 1, because that's apparently as good as any higher level, but should be
     faster. Moreover, we rely on PyTables automatically turning on the HDF5 shuffle filter, what it does when any

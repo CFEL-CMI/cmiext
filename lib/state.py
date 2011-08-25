@@ -33,7 +33,7 @@ class State:
         self.__initialize(J, Ka, Kc, M, isomer)
 
     def __initialize(self, J=0, Ka=0, Kc=0, M=0, isomer=0):
-        assert (J < self.max) and (Ka < self.max) and (Kc < self.max) and (M < self.max) and (isomer < self.max)
+        assert ((J < self.max) and (Ka < self.max) and (Kc < self.max) and (M < self.max) and (isomer < self.max))
         self.__labels = num.array([J, Ka, Kc, M, isomer], dtype=num.uint64)
         self.__id = num.uint64(0)
         for i in range(self.__labels.size):
