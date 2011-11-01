@@ -92,6 +92,14 @@ class Molecule:
             self.positions[i,:] = self.__atoms[i].position
 
 
+    def read(self, filename, type="Zxyz"):
+        """Read molecular strcutre from file"""
+        if type == Zxyz:
+            pass
+        else:
+            raise TypeError("unknown molecule type")
+
+
     def atoms(self):
         """List of molecule's atoms"""
         return self.__atoms
