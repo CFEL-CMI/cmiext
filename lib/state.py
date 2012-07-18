@@ -95,3 +95,15 @@ class State:
 
     def totuple(self):
         return tuple(self.__labels.tolist())
+
+
+
+def create_statelist(Jmax):
+    """Create a list of |State|s of all asymmetric rotor quantum states up to Jmax.
+
+    The list is not ordered energetically.
+    """
+    return
+
+
+# state = State(1, 0, 1, 1)
