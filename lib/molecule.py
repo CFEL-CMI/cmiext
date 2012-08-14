@@ -33,7 +33,7 @@ Masses = {'H': 1.0078250321, 'D': 2.01410178, '2H': 2.01410178,
 Ordernumbers = {'H': 1, 'D': 1, 'C': 6, 'N': 7, 'O': 8, 'S': 16, 'BR': 35, 'I': 53}
 
 
-class Atom:
+class Atom(object):
     """Representation of an atom
 
     Keeps a (private) list of Z and mass that can be accessed via public methods and a (public) copy of positions.
@@ -69,7 +69,7 @@ class Atom:
 
 
 
-class Molecule:
+class Molecule(object):
     """Representation of a Molecule
 
     Keeps a (private) list of atoms and masses that can be accessed via |atom| and |masses| and a (public) array of
