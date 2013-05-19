@@ -30,14 +30,21 @@ class State:
 
     def __init__(self, J=0, Ka=0, Kc=0, M=0, isomer=0):
         self.max = 1000
+        self.pmax = 10
         self.__initialize(J, Ka, Kc, M, isomer)
 
     def __initialize(self, J=0, Ka=0, Kc=0, M=0, isomer=0):
         assert ((J < self.max) and (Ka < self.max) and (Kc < self.max) and (M < self.max) and (isomer < self.max))
-        self.__labels = num.array([J, Ka, Kc, M, isomer], dtype=num.uint64)
+        self.__labels = num.array([J, Ka, Kc, M, isomer], dtype=num.int64)
         self.__id = num.uint64(0)
+        pindex = 0
         for i in range(self.__labels.size):
-            self.__id += num.uint64(self.__labels[i] * self.max**i)
+            if self.__labels[i] < 0:
+                pindex += 1 * self.pmax**i
+            else:
+                pindex += 0 * self.pmax**i
+            self.__id += num.uint64(abs(self.__labels[i]) * self.max**i)
+        self.__id = self.__id * self.pmax**5 + pindex
 
     def J(self):
         return self.__labels[0]
@@ -57,10 +64,19 @@ class State:
     def fromid(self, id):
         """Set quantum-numbers form id"""
         self.__id = num.uint64(id)
-        self.__labels = num.zeros((5,), dtype=num.uint64)
+        self.__labels = num.zeros((5,), dtype=num.int64)
+        pindex = num.zeros((5,), dtype=num.int64)
         for i in range(5):
-            self.__labels[i] = id % self.max
+            pindex[i] = id % self.pmax
+            id //= self.pmax
+        #print "pindex", pindex
+        for i in range(5):
+            #print "id=", id
+            #print "id % self.max=", id % self.max
+            self.__labels[i] = (id % self.max) * ((-1)**pindex[i])
             id //= self.max
+            #print "after id //= self.max, id=", id
+        #print "self.__labels=", self.__labels
         return self
 
     def fromhdfname(self, hdfname):
@@ -68,9 +84,10 @@ class State:
 
         See hdfname() below for a description of the format.
         """
-        qn = num.array(hdfname.split('/'))
+        name = hdfname.replace("n","-")
+        qn = num.array(name.split("/"))
         J, Ka, Kc, M, iso = qn.tolist()
-        self.__initialize(num.uint64(J[1:]), num.uint64(Ka[1:]), num.uint64(Kc[1:]), num.uint64(M[1:]), num.uint64(iso[1:]))
+        self.__initialize(num.int64(J[1:]), num.int64(Ka[1:]), num.int64(Kc[1:]), num.int64(M[1:]), num.int64(iso[1:]))
         return self
 
     def id(self):
@@ -85,7 +102,11 @@ class State:
         Prepend '_' to all numbers to make them valid Python identifiers. We split the individual quantum numbers by '/'
         in order to provide subgrouping for faster transversal of the HDF5 directory.
         """
-        return "_%d/_%d/_%d/_%d/_%d" % self.totuple()
+        name = "_%d/_%d/_%d/_%d/_%d" % self.totuple()
+        #print "hdfname - before replace:", name
+        name.replace("-","n")
+        #print "hdfname - after replace:", name.replace("-","n")
+        return name.replace("-","n")
 
     def toarray(self):
         return self.__labels
