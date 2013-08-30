@@ -64,7 +64,10 @@ class State:
         return self.__labels[4]
 
     def nssw(self, forbidden):
+        """Give back nuclear spin weight 0 for nuclear-spin-statistically forbidden rve-states, 1 otherwise"""
+        if "Ka" == forbidden and self.Ka() % 2 == 0: return 0
         if "Kb" == forbidden and (self.Ka() + self.Kc()) % 2 == 0: return 0
+        if "Kc" == forbidden and self.Kc() % 2 == 0: return 0
         return 1
 
     def fromid(self, id):
