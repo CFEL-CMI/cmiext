@@ -63,6 +63,10 @@ class State:
     def isomer(self):
         return self.__labels[4]
 
+    def nssw(self, forbidden):
+        if "Kb" == forbidden and (self.Ka() + self.Kc()) % 2 == 0: return 0
+        return 1
+
     def fromid(self, id):
         """Set quantum-numbers form id"""
         self.__id = num.uint64(id)
