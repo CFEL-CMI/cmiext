@@ -41,19 +41,20 @@ class State:
     def __initialize(self, J=0, Ka=0, Kc=0, M=0, isomer=0):
         """Store all info and reata a unique ID for the state.
 
-        For symmetric tops, K is stored in the natural choice of Ka or Kc. For the purpose of creating a unique ID, the
-        digital position of the other K (Kc or Ka, respectively) is set to "1" for negative K.
+        For symmetric tops, K is stored in the natural choice of Ka or Kc. The state depends on the sign of the product
+        of K*M, which is stored in the decimal places 15 and 16 (0-14 being used to encode J, Ka, Kc, M, isomer).
         """
-        assert ((J < self.max) and (Ka < self.max) and (Kc < self.max) and (M < self.max) and (isomer < self.max))
+        assert ((0 <= J < self.max) and (abs(Ka) < self.max) and (abs(Kc) < self.max) and (0 <= M < self.max)
+                and (0 <= isomer < self.max))
         self.__labels = num.array([J, Ka, Kc, M, isomer], dtype=num.int64)
         self.__id = num.uint64(0)
-        self.__symtop_K_sign = 1
+        self.__symtop_sign = 1
         for i in range(self.__labels.size):
             self.__id += num.uint64(abs(self.__labels[i]) * self.max**i)
-        # handle negative sign of symmetric-top K
+        # handle negative sign of symmetric-top K*M
         for i in (1,2):
             if self.__labels[i] < 0:
-                self.__symtop_K_sign = -1
+                self.__symtop_sign = -1
                 self.__id += num.uint64(self.max**5 * 10**(i-1))
 
     def J(self):
@@ -85,10 +86,10 @@ class State:
         for i in range(5):
             self.__labels[i] = id % self.max
             id //= self.max
-        # handle negative sign of symmetric-top K
+        # handle negative sign of symmetric-top K*M
         for i in (1,2):
             if 1 == id % 10:
-                self.__symtop_K_sign = -1
+                self.__symtop_sign = -1
                 self.__labels[i] *= -1
             id //= 10
         return self
