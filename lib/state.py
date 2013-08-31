@@ -87,9 +87,10 @@ class State:
             id //= self.max
         # handle negative sign of symmetric-top K
         for i in (1,2):
-            if 1**i == id:
+            if 1 == id % 10:
                 self.__symtop_K_sign = -1
                 self.__labels[i] *= -1
+            id //= 10
         return self
 
     def fromhdfname(self, hdfname):
