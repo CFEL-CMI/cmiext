@@ -1,4 +1,6 @@
-*~
-*.pyc
 *.bak
+*.egg
+*.egg-info
+*.pyc
 build
+dist
