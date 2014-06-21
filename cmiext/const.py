@@ -24,8 +24,9 @@ Physical constants are based on CODATA values as far as available, see module co
 # mathematical constants
 pi = 3.1415926535897931
 
+
 # CODATA
-from jkext.codata import codata
+from cmiext.codata import codata
 atomic_unit_of_electric_dipole_moment   = codata["atomic unit of electric dipole mom."][0]
 Boltzmann_constant                      = codata["Boltzmann constant"][0]
 electron_mass                           = codata["electron mass"][0]
@@ -35,7 +36,6 @@ speed_of_light                          = codata["speed of light in vacuum"][0]
 unified_atomic_mass                     = codata["unified atomic mass unit"][0]
 vacuum_permittivity                     = codata["electric constant"][0]
 vacuum_permeability                     = codata["mag. constant"][0]
-
 
 
 # other physical units or conversion factors

@@ -22,7 +22,7 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 import numpy as num
 import numpy.linalg
 
-import jkext.const as const
+import cmiext.const as const
 
 
 Masses = {'H': 1.0078250321, 'D': 2.01410178, '2H': 2.01410178,

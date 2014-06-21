@@ -22,7 +22,7 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 import numpy as num
 import numpy.linalg
 
-import jkext.const as const
+import cmiext.const as const
 
 
 
