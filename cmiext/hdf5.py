@@ -23,11 +23,20 @@ import tables
 
 
 def readVLArray(file, name):
-    array = file.getNode(name)
+    return read_vlarray(file, name)
+
+def read_vlarray(file, name):
+    array = file.get_node(name)
     return num.array(array.read())[0]
 
 
 def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float64Atom(shape=()),
+                 filters=tables.Filters(complevel=1, complib='zlib')):
+    return write_vlarray(file, groupname, leafname, data, comment, atom, filters)
+
+
+
+def write_vlarray(file, groupname, leafname, data, comment="", atom=tables.Float64Atom(shape=()),
                  filters=tables.Filters(complevel=1, complib='zlib')):
     """
     Write a single array, corresponding, for instance, to a single Stark curve, to the storage file.
@@ -40,18 +49,18 @@ def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float6
     group = file.root
     for name in groupname.split('/'):
         try:
-            group = file.getNode(group, name)
+            group = file.get_node(group, name)
         except tables.exceptions.NodeError:
             try:
-                group = file.createGroup(group, name)
+                group = file.create_group(group, name)
             except tables.exceptions.NodeError:
                 assert False, "Stark storage error: cannot create non-existing group %s from %s!" % (name, groupname)
     # if the dataset exists already, delete it
     try:
-        file.removeNode(group, leafname)
+        file.remove_node(group, leafname)
     except tables.exceptions.NodeError as xxx_todo_changeme:
         tables.exceptions.NoSuchNodeError = xxx_todo_changeme
         pass
-    array = file.createVLArray(group, leafname, atom, comment, filters)
+    array = file.create_vlarray(group, leafname, atom, comment, filters)
     array.append(data)
     array.flush()
