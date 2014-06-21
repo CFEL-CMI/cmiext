@@ -1,35 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2008,2009 Jochen Küpper <software@jochen-kuepper.de>
-
+# Copyright (C) 2008,2009,2014 Jochen Küpper <jochen.kuepper@cfel.de>
 
 import os
-from distutils.core import setup
+from setuptools import setup
 
 extra_compile_args = []
 library_dirs = []
 
-long_description = """JK Python extensions
+long_description = """CMI Python extensions
 
 Python extensions for calculations relevant to the manipulation of molecules.
 
-Original authors:   Jochen Küpper <software@jochen-kuepper.de>
-Current maintainer: Jochen Küpper <software@jochen-kuepper.de>
+Original author:    Jochen Küpper <jochen.kuepper@cfel.de>
+Current maintainer: Jochen Küpper <jochen.kuepper@cfel.de>
 """
 
 
-setup(name="jkext",
+setup(name="cmiext",
       author              = "Jochen Küpper",
-      author_email        = "software@jochen-kuepper.de",
-      description         = "JK Python extensions",
+      author_email        = "jochen.kuepper@cfel.de",
+      description         = "CMI Python extensions",
       license             = "GPL",
-      url                 = "http://python.jochen-kuepper.de",
-      version             = "0.3.0",
+      url                 = "http://desy.cfel.de/cid/cmi/cmiext",
+      version             = "0.3.1",
       long_description    = long_description,
-      package_dir         = {'jkext': 'lib'},
-      packages            = ['jkext'],
-      scripts             = ['scripts/jkext_GAMESS',
-                             'scripts/jkext_linearize']
+      packages            = ['cmiext'],
       )
-

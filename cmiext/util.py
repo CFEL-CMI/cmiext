@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
-from __future__ import division
+
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
@@ -95,4 +95,4 @@ if __name__ == "__main__":
     x2 = num.linspace(0., 30., 16)
     y1 = x1
     y2 = x2**2
-    print column_merge([x1, y1], [x2, y2])
+    print(column_merge([x1, y1], [x2, y2]))
