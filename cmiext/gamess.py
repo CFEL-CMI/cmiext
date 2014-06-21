@@ -14,12 +14,12 @@
 #
 # You should have received a copy of the GNU General Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
-from __future__ import division
+
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 import numpy as num
-import molecule
+from . import molecule
 
 def atom(line):
     name, charge, x, y, z = line.split()

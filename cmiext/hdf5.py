@@ -14,7 +14,7 @@
 #
 # You should have received a copy of the GNU General Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
-from __future__ import division
+
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
@@ -49,7 +49,8 @@ def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float6
     # if the dataset exists already, delete it
     try:
         file.removeNode(group, leafname)
-    except tables.exceptions.NodeError, tables.exceptions.NoSuchNodeError:
+    except tables.exceptions.NodeError as xxx_todo_changeme:
+        tables.exceptions.NoSuchNodeError = xxx_todo_changeme
         pass
     array = file.createVLArray(group, leafname, atom, comment, filters)
     array.append(data)

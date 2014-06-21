@@ -1,7 +1,7 @@
 # -*- coding: utf-8; fill-column: 120 -*-
 #
-# This file is part of JK Python extensions
-# Copyright (C) 2008,2009,2010 Jochen Küpper <software@jochen-kuepper.de>
+# This file is part of CMI Python extensions
+# Copyright (C) 2008,2009,2010 Jochen KÃ¼pper <jochen.kuepper@cfel.de>
 #
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
@@ -14,15 +14,12 @@
 #
 # You should have received a copy of the GNU General Public License along with this program. If not, see
 # <http://www.gnu.org/licenses/>.
-from __future__ import division
-
-__author__ = "Jochen Küpper <software@jochen-kuepper.de>"
+__author__ = "Jochen KÃ¼pper <jochen.kuepper@cfel.de>"
 
 """Provide mathematical and physical constants.
 
 Physical constants are based on CODATA values as far as available, see module codata.py for details.
-
-Values last updated: $Date$"""
+"""
 
 # mathematical constants
 pi = 3.1415926535897931
