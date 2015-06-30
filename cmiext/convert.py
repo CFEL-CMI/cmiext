@@ -55,6 +55,11 @@ def invcm2J(val):
     return val * 100 * cmiext.const.Planck_constant * cmiext.const.speed_of_light
 
 
+def J2eV(val):
+    """Joule -> electron volt"""
+    return cmiext.convert.numpy.array(val) / cmiext.codata.codata["electron volt-joule relationship"][0]
+
+
 def J2Hz(val):
     """Joule -> Hertz"""
     return numpy.array(val) / cmiext.const.Planck_constant
