@@ -47,7 +47,7 @@ class State:
         assert ((0 <= J < self.max) and (abs(Ka) < self.max) and (abs(Kc) < self.max) and (0 <= M < self.max)
                 and (0 <= isomer < self.max))
         self.__labels = num.array([J, Ka, Kc, M, isomer], dtype=num.int64)
-        self.__id = num.uint64(0)
+        self.__id = num.int64(0)
         self.__symtop_sign = 1
         for i in range(self.__labels.size):
             self.__id += num.uint64(abs(self.__labels[i]) * self.max**i)
