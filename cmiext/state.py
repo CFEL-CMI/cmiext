@@ -47,7 +47,7 @@ class State:
         assert ((0 <= J < self.max) and (abs(Ka) < self.max) and (abs(Kc) < self.max) and (0 <= M < self.max)
                 and (0 <= isomer < self.max))
         self.__labels = num.array([J, Ka, Kc, M, isomer], dtype=num.int64)
-        self.__id = num.int64(0)
+        self.__id = num.uint64(0)
         self.__symtop_sign = 1
         for i in range(self.__labels.size):
             self.__id += num.uint64(abs(self.__labels[i]) * self.max**i)
@@ -81,17 +81,17 @@ class State:
 
     def fromid(self, id):
         """Set quantum-numbers form id"""
-        self.__id = num.uint64(id)
+        self.__id = num.int64(id)
         self.__labels = num.zeros((5,), dtype=num.int64)
         for i in range(5):
-            self.__labels[i] = id % self.max
-            id //= self.max
+            self.__labels[i] = self.__id % self.max
+            self.__id //= self.max
         # handle negative sign of symmetric-top K*M
         for i in (1,2):
-            if 1 == id % 10:
+            if 1 == self.__id % 10:
                 self.__symtop_sign = -1
                 self.__labels[i] *= -1
-            id //= 10
+            self.__id //= 10
         return self
 
     def fromhdfname(self, hdfname):
