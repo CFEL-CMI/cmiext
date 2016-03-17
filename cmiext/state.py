@@ -54,7 +54,7 @@ class State:
         for i in range(self.__labels.size):
             self.__id += np.uint64(abs(self.__labels[i]) * self.max**i)
         # handle negative sign of symmetric-top K*M
-        if Ka * Kc * M < 0:
+        if Ka < 0 or Kc < 0:
             self.__symtop_sign = -1
             self.__id += np.uint64(1e15)
 
@@ -85,7 +85,7 @@ class State:
 
     def fromid(self, id):
         """Set quantum-numbers form id"""
-        id = np.uint64(id)
+        id = np.int64(id)
         self.__id = id
         self.__labels = np.zeros((5,), dtype=np.int64)
         for i in range(5):
@@ -94,6 +94,9 @@ class State:
         # handle negative sign of symmetric-top K*M
         self.__symtop_sign = id % 10
         id //= 10
+        if self.__symtop_sign > 0:
+            for i in [1,2]:
+                self.__labels[i] = -self.__labels[i]
         return self
 
     def fromhdfname(self, hdfname):
@@ -121,7 +124,6 @@ class State:
         Prepend '_' to all numbers to make them valid Python identifiers. We split the individual quantum numbers by '/'
         in order to provide subgrouping for faster transversal of the HDF5 directory.
 
-        .. todo:: Implement symtop-sign usage
         """
         name = "_%d/_%d/_%d/_%d/_%d" % self.totuple()
         name.replace("-","n")
