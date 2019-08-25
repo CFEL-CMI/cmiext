@@ -115,7 +115,7 @@ def A32CM2_V(val):
 
 # useful strong-field physics conversions
 def sfi_au2eV(p, m=cmiext.const.electron_mass):
-    """convert electron momentum in atomic units to kinetic energy
+    """convert electron momentum in atomic units to kinetic energy in eV
 
     p = momentum in atomic units
     m = mass in SI units
@@ -124,9 +124,19 @@ def sfi_au2eV(p, m=cmiext.const.electron_mass):
     return J2eV(p**2 / (2 * m))
 
 
+# useful strong-field physics conversions
+def sfi_Keldysh(Ip, Up):
+    """calulate Keldysh parameter from Ip and Up
+
+    Ip = ionization potential
+    Up = pondermotive energy
+    """
+    return sqrt(Ip/(2*Up))
+
+
 
 def sfi_Up(wl, I=None, E=None):
-    """calculate pondermotive energy
+    """calculate pondermotive energy in J(!)
 
     Need so specify exactly one of I or E.
 
@@ -134,7 +144,7 @@ def sfi_Up(wl, I=None, E=None):
     I = intensity in W/m^2
     E = electric field amplitude in V/m
 
-    See https://en.wikipedia.org/wiki/Ponderomotive_energy dor details.
+    See https://en.wikipedia.org/wiki/Ponderomotive_energy for details.
     """
     if ((None == I) and (None == E)) or ((None != I) and (None != E)):
         raise ValueError('sfi_Up: Must specify exactly one of I or E')
@@ -143,3 +153,8 @@ def sfi_Up(wl, I=None, E=None):
     w = 2 * numpy.pi * cmiext.const.speed_of_light / wl
     Up = (cmiext.const.electron_charge * E)**2 / (4 * cmiext.const.electron_mass * w**2)
     return Up
+
+
+
+def sfi_Up_eV(wl, I=None, E=None):
+    return cmiext.convert.J2eV(sfi_Up(wl, I, E))
