@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2008,2009,2014 Jochen Küpper <jochen.kuepper@cfel.de>
+# Copyright (C) 2008,2009,2014,2020 Jochen Küpper <jochen.kuepper@cfel.de>
 
 import os
 from setuptools import setup
@@ -22,9 +22,10 @@ setup(name="cmiext",
       author              = "Jochen Küpper",
       author_email        = "jochen.kuepper@cfel.de",
       description         = "CMI Python extensions",
-      license             = "GPL",
-      url                 = "http://desy.cfel.de/cid/cmi/cmiext",
-      version             = "0.3.1",
+      license             = "GPL v3",
+      url                 = "https://www.controlled-molecule-imaging.org/research/further_projects/software",
+      version             = "1.0",
       long_description    = long_description,
       packages            = ['cmiext'],
+      data_files          = [("", ["setup.cfg", "LICENSE", "COPYING", "README.devel.md"])]
       )

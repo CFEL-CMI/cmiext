@@ -23,11 +23,20 @@ import tables
 
 
 def readVLArray(file, name):
+    return read_vlarray(file, name)
+
+def read_vlarray(file, name):
     array = file.get_node(name)
     return num.array(array.read())[0]
 
 
 def writeVLArray(file, groupname, leafname, data, comment="", atom=tables.Float64Atom(shape=()),
+                 filters=tables.Filters(complevel=1, complib='zlib')):
+    return write_vlarray(file, groupname, leafname, data, comment, atom, filters)
+
+
+
+def write_vlarray(file, groupname, leafname, data, comment="", atom=tables.Float64Atom(shape=()),
                  filters=tables.Filters(complevel=1, complib='zlib')):
     """
     Write a single array, corresponding, for instance, to a single Stark curve, to the storage file.

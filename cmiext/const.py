@@ -28,7 +28,9 @@ pi = 3.1415926535897931
 # CODATA
 from cmiext.codata import codata
 atomic_unit_of_electric_dipole_moment   = codata["atomic unit of electric dipole mom."][0]
+Bohr_radius                             = codata["Bohr radius"][0]
 Boltzmann_constant                      = codata["Boltzmann constant"][0]
+electron_charge                         = codata["elementary charge"][0]
 electron_mass                           = codata["electron mass"][0]
 electron_volt                           = codata["electron volt"][0]
 Planck_constant                         = codata["Planck constant"][0]
