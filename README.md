@@ -2,7 +2,7 @@
 
 ## License
 
-The CMI Python extensions are _Copyright (C) 2008,2009,2016,2020 Jochen Küpper_; see LICENSE for details.
+The CMI Python extensions are _Copyright (C) 2008,2009,2016,2020 Jochen Küpper_; see [LICENSE](./LICENSE) for details.
 
 
 ## Prerequisites
