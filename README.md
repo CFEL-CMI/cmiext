@@ -33,8 +33,9 @@ python setup.py install --user
 ```
 
 
-
+<!-- Put Emacs local variables into HTML comment
 Local Variables:
 coding: utf-8
 fill-column: 80
 End:
+-->
