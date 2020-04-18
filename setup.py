@@ -24,8 +24,8 @@ setup(name="cmiext",
       description         = "CMI Python extensions",
       license             = "GPL v3",
       url                 = "https://www.controlled-molecule-imaging.org/research/further_projects/software",
-      version             = "1.0",
+      version             = "1.0.1dev0",
       long_description    = long_description,
       packages            = ['cmiext'],
-      data_files          = [("", ["setup.cfg", "LICENSE", "COPYING", "README.devel.md"])]
+      data_files          = [("", ["LICENSE", "COPYING", "README.devel.md"])]
       )
