@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2008,2009,2014 Jochen Küpper <jochen.kuepper@cfel.de>
+# Copyright (C) 2008,2009,2014,2020 Jochen Küpper <jochen.kuepper@cfel.de>
 
 import os
 from setuptools import setup
