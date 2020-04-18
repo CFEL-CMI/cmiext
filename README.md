@@ -1,14 +1,11 @@
-CMI Python extensions
-=====================
+# CMI Python extensions
 
-* License
+## License
 
-The JK Python extensions are
-  Copyright (C) 2008,2009,2016 Jochen Küpper
-See License for details.
+The CMI Python extensions are _Copyright (C) 2008,2009,2016,2020 Jochen Küpper_; see LICENSE for details.
 
 
-* Prerequisites
+## Prerequisites
 
 The extension package rests on the shoulders of giants, i.e., you need
 a recent Python 3.x system and some other important Python packages,
@@ -16,17 +13,28 @@ including (but not necessarily limited to)
   - numpy
   - pytables
 
-These requirements can all be met by using the Enthought Python
-Distribution, for example.
 
-
-* Installation
+## Installation
 
 Adminstrator installation:
-    python setup.py install
+```shell
+python setup.py install
+```
 
-In order to install this extension module in user-space, run
-    python setup.py install --user
-and set your environment up for python to find it:
-    setenv PYTHONUSERBASE=$HOME/.local
+In order to install this extension module in user-space, [set up your
+environment](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONUSERBASE)
+for python to find it, e.g.,
+```shell
+setenv PYTHONUSERBASE=$HOME/.local
+```
+and run the install command
+```shell
+python setup.py install --user
+```
 
+
+
+Local Variables:
+coding: utf-8
+fill-column: 80
+End:
