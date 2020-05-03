@@ -40,6 +40,11 @@ def eV2m(val):
     return 1 / numpy.array(val) / cmiext.codata.codata["electron volt-inverse meter relationship"][0]
 
 
+def eV2invcm(val):
+    """eV -> wavenumber (cm^{-1})"""
+    return 0.01 * numpy.array(val) * cmiext.codata.codata["electron volt-inverse meter relationship"][0]
+
+
 def E2I(val):
     """field amplitude (V/m) -> intensity (m)"""
     return 0.5 * cmiext.const.speed_of_light * cmiext.const.vacuum_permittivity * numpy.array(val)**2
@@ -60,9 +65,19 @@ def I2E(val):
     return numpy.sqrt(2 * val / (cmiext.const.speed_of_light * cmiext.const.vacuum_permittivity))
 
 
+def invcm2Hz(val):
+    """wavenumber (cm^{-1}) -> frequency (Hz)"""
+    return val * 100 * cmiext.const.speed_of_light
+
+
 def invcm2J(val):
     """cm^{-1} -> Joule"""
-    return val * 100 * cmiext.const.Planck_constant * cmiext.const.speed_of_light
+    return invcm2Hz(val) * cmiext.const.Planck_constant
+
+
+def invcm2m(val):
+    """wavenumber (cm^{-1}) -> wavelength (m)"""
+    return 0.01 / val
 
 
 def J2eV(val):
