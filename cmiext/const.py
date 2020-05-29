@@ -21,9 +21,6 @@ __author__ = "Jochen Küpper <jochen.kuepper@cfel.de>"
 Physical constants are based on CODATA values as far as available, see module codata.py for details.
 """
 
-# mathematical constants
-pi = 3.1415926535897931
-
 
 # CODATA
 from cmiext.codata import codata
