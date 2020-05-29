@@ -20,39 +20,40 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
 """Unit conversion routines"""
 
-import cmiext.const
-import cmiext.codata
-import numpy
+import numpy as np
+import scipy
+import scipy.constants
+
 
 
 def D2Cm(val):
     """Convert dipole moment from Debye to Coulomb * meter"""
-    return numpy.array(val) * 1e-21 / cmiext.const.speed_of_light
+    return np.array(val) * 1e-21 / scipy.constants.speed_of_light
 
 
 def Cm2D(val):
     """Convert dipole moment from Coulomb * meter to Debye"""
-    return numpy.array(val) / (1e-21 / cmiext.const.speed_of_light)
+    return np.array(val) / (1e-21 / scipy.constants.speed_of_light)
 
 
 def eV2m(val):
     """eV -> wavelenght (m)"""
-    return 1 / numpy.array(val) / cmiext.codata.codata["electron volt-inverse meter relationship"][0]
+    return 1 / np.array(val) / scipy.constants.value('electron volt-inverse meter relationship')
 
 
 def eV2invcm(val):
     """eV -> wavenumber (cm^{-1})"""
-    return 0.01 * numpy.array(val) * cmiext.codata.codata["electron volt-inverse meter relationship"][0]
+    return 0.01 * np.array(val) * scipy.constants.value('electron volt-inverse meter relationship')
 
 
 def E2I(val):
     """field amplitude (V/m) -> intensity (m)"""
-    return 0.5 * cmiext.const.speed_of_light * cmiext.const.vacuum_permittivity * numpy.array(val)**2
+    return 0.5 * scipy.constants.speed_of_light * scipy.constants.epsilon_0 * np.array(val)**2
 
 
 def Hz2J(val):
     """Hertz -> Joule"""
-    return numpy.array(val) * cmiext.const.Planck_constant
+    return np.array(val) * scipy.constants.Planck
 
 
 def MHz2J(val):
@@ -62,17 +63,17 @@ def MHz2J(val):
 
 def I2E(val):
     """intensity (W/m^2) -> amplitude (V/m)"""
-    return numpy.sqrt(2 * val / (cmiext.const.speed_of_light * cmiext.const.vacuum_permittivity))
+    return np.sqrt(2 * val / (scipy.constants.speed_of_light * scipy.constants.epsilon_0))
 
 
 def invcm2Hz(val):
     """wavenumber (cm^{-1}) -> frequency (Hz)"""
-    return val * 100 * cmiext.const.speed_of_light
+    return val * 100 * scipy.constants.speed_of_light
 
 
 def invcm2J(val):
     """cm^{-1} -> Joule"""
-    return invcm2Hz(val) * cmiext.const.Planck_constant
+    return invcm2Hz(val) * scipy.constants.Planck
 
 
 def invcm2m(val):
@@ -82,12 +83,12 @@ def invcm2m(val):
 
 def J2eV(val):
     """Joule -> electron volt"""
-    return cmiext.convert.numpy.array(val) / cmiext.codata.codata["electron volt-joule relationship"][0]
+    return np.array(val) / scipy.constants.value('electron volt-joule relationship')
 
 
 def J2Hz(val):
     """Joule -> Hertz"""
-    return numpy.array(val) / cmiext.const.Planck_constant
+    return np.array(val) / scipy.constants.Planck
 
 
 def J2MHz(val):
@@ -97,45 +98,45 @@ def J2MHz(val):
 
 def J2invcm(val):
     """Joule -> cm^{-1}"""
-    return val / cmiext.const.Planck_constant / cmiext.const.speed_of_light / 100
+    return val / scipy.constants.Planck / scipy.constants.speed_of_light / 100
 
 
 def inch2m(val):
     """inch -> m"""
-    return val * cmiext.const.inch
+    return val * scipy.constants.inch
 
 
 def invcm2J(val):
     """cm^{-1} -> Joule"""
-    return val * 100 * cmiext.codata.codata["Planck constant"][0] * cmiext.codata.codata["speed of light in vacuum"][0]
+    return val * 100 * scipy.constants.Planck * scipy.constants.speed_of_light
 
 
 def m2eV(val):
     """wavelenght (m) -> eV"""
-    return 1/ numpy.array(val) / cmiext.codata.codata["electron volt-inverse meter relationship"][0]
+    return 1/ np.array(val) / scipy.constants.physical_constants.value('electron volt-inverse meter relationship')
 
 
 def kV_cm2V_m(val):
     """kV/cm -> V/m"""
-    return numpy.array(val) / 1e-5
+    return np.array(val) / 1e-5
 
 def V_m2kV_cm(val):
     """V/m -> kV/cm"""
-    return numpy.array(val) * 1e-5
+    return np.array(val) * 1e-5
 
 def A32CM2_V(val):
-    """Å^3 -> C M^2 / V"""
-    return val*cmiext.const.vacuum_permittivity*((cmiext.const.Angstrom)**3)*4*cmiext.const.pi
+    """polarizability volume (Å^3) -> polarizability (C M^2 / V)"""
+    return val * scipy.constants.epsilon_0 * (scipy.constants.angstrom)**3 * 4*scipy.constants.pi
 
 
 # useful strong-field physics conversions
-def sfi_au2eV(p, m=cmiext.const.electron_mass):
+def sfi_au2eV(p, m=scipy.constants.electron_mass):
     """convert electron momentum in atomic units to kinetic energy in eV
 
     p = momentum in atomic units
     m = mass in SI units
     """
-    p = cmiext.convert.numpy.array(p) * cmiext.const.Planck_constant / (2 * numpy.pi * cmiext.const.Bohr_radius)
+    p = np.array(p) * scipy.constants.Planck / (2 * np.pi * scipy.constants.value('Bohr radius'))
     return J2eV(p**2 / (2 * m))
 
 
@@ -146,7 +147,7 @@ def sfi_Keldysh(Ip, Up):
     Ip = ionization potential
     Up = pondermotive energy
     """
-    return sqrt(Ip/(2*Up))
+    return scipy.sqrt(Ip/(2*Up))
 
 
 
@@ -165,8 +166,8 @@ def sfi_Up(wl, I=None, E=None):
         raise ValueError('sfi_Up: Must specify exactly one of I or E')
     if None == E:
         E = I2E(I)
-    w = 2 * numpy.pi * cmiext.const.speed_of_light / wl
-    Up = (cmiext.const.electron_charge * E)**2 / (4 * cmiext.const.electron_mass * w**2)
+    w = 2 * np.pi * scipy.constants.speed_of_light / wl
+    Up = (scipy.constants.elementary_charge * E)**2 / (4 * scipy.constants.electron_mass * w**2)
     return Up
 
 

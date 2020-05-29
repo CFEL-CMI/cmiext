@@ -19,11 +19,10 @@
 
 __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 
-import numpy as num
+import numpy as np
 import numpy.linalg
 
-import cmiext.const as const
-
+import scipy.constants
 
 Masses = {'H': 1.0078250321, 'D': 2.01410178, '2H': 2.01410178,
           'C': 12, 'N': 14.0030740052, 'O': 15.9949146221,
@@ -45,12 +44,12 @@ class Atom(object):
     def __init__(self, symbol, position, length="SI"):
         symbol = symbol
         self.__Z = Ordernumbers[symbol.upper()]
-        self.__mass = Masses[symbol.upper()] * const.unified_atomic_mass
+        self.__mass = Masses[symbol.upper()] * scipy.constants.value('unified atomic mass unit')
         self.__symbol = symbol
         self.position = num.array(position, num.float)
         assert(self.position.shape == (3,))
         if length == "Angstrom":
-            self.position *= num.float(const.Angstrom)
+            self.position *= num.float(scipy.constants.angstrom)
         else:
             assert(length == "SI")
 
@@ -123,7 +122,7 @@ class Molecule(object):
     def mass(self, unit="kg"):
         """Sum of atomic masses"""
         if "u" == unit:
-            k = 1 / const.unified_atomic_mass
+            k = 1 / scipy.constants.value('unified atomic mass unit')
         else:
             assert "kg" == unit
             k = 1
@@ -150,7 +149,7 @@ class Molecule(object):
         # sort eigenvalues and eigenvetors
         idx = num.argsort(eval) # sort moments of inertia in ascending order
         # calculate rotational constants in Hz
-        rotcon = const.Planck_constant / (8 * num.pi**2 * eval[idx]) # in Hz
+        rotcon = scipy.constants.Planck / (8 * num.pi**2 * eval[idx]) # in Hz
         # and provide corresponding eigenvectors of the axes (change columns!)
         axes = evec[:, idx]
         return rotcon, axes

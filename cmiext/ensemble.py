@@ -22,8 +22,6 @@ __author__ = "Jochen Küpper <software@jochen-kuepper.de>"
 import numpy as num
 import numpy.linalg
 
-import cmiext.const as const
-
 
 
 class Ensemble:
