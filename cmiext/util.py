@@ -1,7 +1,7 @@
 # -*- coding: utf-8; fill-column: 120 -*-
 #
-# This file is part of JK Python extensions
-# Copyright (C) 2008 Jochen Küpper <software@jochen-kuepper.de>
+# This file is part of the CMI Python extensions
+# Copyright (C) 2008,2020 Jochen Küpper <software@jochen-kuepper.de>
 #
 # This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later
@@ -51,11 +51,13 @@ def column_merge(list1, list2, column=0):
         list.append(vec)
     return list
 
+
 def columnarray_merge(list1, list2, column=0):
     """Merge two lists of 1D arrays (vectors) according to the values in one |column| of the two. Entries of equal
     base-values are reduced to the one in list1. The resulting vectors are in random order.
 
     Values are considered equal when their relative difference is smaller than 10*epsilon.
+
     """
     assert len(list1) == len(list2)
     lshape1 = list1[1].shape[1]
@@ -71,7 +73,7 @@ def columnarray_merge(list1, list2, column=0):
         list1 = nlist1
         list2 = nlist2
     list = column_merge(list1, list2, column=0)
-    
+
     if lshape1>1: # change back into array
         ar = num.vstack((list[1],list[2]))
         for i in range(3,lshape1+1):
@@ -79,6 +81,7 @@ def columnarray_merge(list1, list2, column=0):
         ar = ar.transpose()
         list = [list[0],ar]
     return list
+
 
 def column_sort(data, column=0):
     """Sort a list of 1D arrays (vectors) according to the values in one of them, as specified by |column|."""

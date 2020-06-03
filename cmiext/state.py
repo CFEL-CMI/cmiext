@@ -40,7 +40,7 @@ class State:
         self.__symtop_sign = 1
 
     def __initialize(self, J=0, Ka=0, Kc=0, M=0, isomer=0):
-        """Store all info and reata a unique ID for the state.
+        """Store all info and creat a unique ID for the state.
 
         For symmetric tops, :math:`K` is stored in the natural choice of :math:`K_a` or :math:`K_c`. The state depends
         on the sign of the product of :math:`K\cdot{}M`, which is stored in the decimal place 15 (0-14 being used to
