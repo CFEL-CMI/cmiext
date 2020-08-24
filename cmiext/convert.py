@@ -113,7 +113,7 @@ def invcm2J(val):
 
 def m2eV(val):
     """wavelenght (m) -> eV"""
-    return 1/ np.array(val) / scipy.constants.physical_constants.value('electron volt-inverse meter relationship')
+    return 1/ np.array(val) / scipy.constants.value('electron volt-inverse meter relationship')
 
 
 def kV_cm2V_m(val):
